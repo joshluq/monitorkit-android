@@ -1,68 +1,114 @@
 # Monitorkit
 
-This is an Android library project generated from the Templatekit template.
+**"Data-driven decisions, not assumptions."**
 
-## Structure
+Monitorkit is a powerful, lightweight Android library designed for real-time performance monitoring and system health tracking. It empowers developers to move beyond guesswork by providing precise metrics on resource consumption and application behavior.
 
-### `library/`
-The main reusable Android library component. This is the artifact that will be consumed by other projects.
+## 🚀 Key Features
 
-- **`src/main/java/`**: Main library source code
-- **`src/test/java/`**: Unit tests (JVM)
-- **`src/androidTest/java/`**: Instrumented tests (device/emulator)
-- **`src/main/res/`**: Library resources
-- **`consumer-rules.pro`**: ProGuard rules for library consumers
+- **Real-time Monitoring**: Track CPU and Memory usage as they happen.
+- **Custom Event Tracking**: Define and monitor business-specific events.
+- **Diagnostics**: Identify performance bottlenecks before they impact users.
+- **Agnostic Design**: Integrates seamlessly without forcing third-party dependencies on your project.
+- **Multi-Provider Support**: Manage multiple data consumers (e.g., Firebase, Sentry, Custom API) through a single interface.
+- **Hilt Ready**: Built-in support for Dependency Injection using Hilt.
 
-### `showcase/`
-A demonstration Android application that consumes the library. Use this app to:
+## 🏗 Architecture
 
-- Test the library API during development
-- Showcase how to use the library
-- Develop and validate features in an integrated environment
-- Run instrumented tests against the library
+Monitorkit follows **Clean Architecture** principles, ensuring that business logic is isolated from external frameworks and delivery mechanisms.
 
-The showcase app uses the same base package as the library (plus `.showcase`) for seamless integration.
+```mermaid
+graph TD
+    subgraph "Presentation Layer (SDK)"
+        M[MonitorkitManager]
+    end
 
-## Building
+    subgraph "Domain Layer"
+        UC[UseCases]
+        R[Repository Interface]
+    end
 
-### Compile the library
-```bash
-./gradlew :library:assemble
+    subgraph "Data Layer"
+        RepoImpl[Repository Implementation]
+        DS[DataSource]
+        P[Provider Interface]
+    end
+
+    subgraph "Consumer Application (Showcase)"
+        ImplP[LogMonitorProvider]
+        ExtLib[Third-party SDKs]
+    end
+
+    M --> UC
+    UC --> R
+    RepoImpl -- implements --> R
+    RepoImpl --> DS
+    DS --> P
+    ImplP -- implements --> P
+    ImplP --> ExtLib
 ```
 
-### Run library tests
-```bash
-./gradlew :library:test
+## 🛠 Usage Example (from Showcase)
+
+### 1. Implement a Provider
+Create a class that implements `MonitorProvider` to route data to your preferred analytics or monitoring service.
+
+```kotlin
+class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider {
+    override suspend fun trackEvent(event: MonitorEvent) {
+        Log.d("Monitor", "Event: ${event.name}")
+    }
+
+    override suspend fun trackMetric(metric: PerformanceMetric) {
+        Log.d("Monitor", "Metric: ${metric.type} = ${metric.value}")
+    }
+}
 ```
 
-### Build the showcase app
-```bash
-./gradlew :showcase:assembleDebug
+### 2. Initialize and Inject
+The library is Hilt-ready. You can inject `MonitorkitManager` and configure your providers.
+
+```kotlin
+@HiltAndroidApp
+class ShowcaseApp : Application() {
+    @Inject lateinit var monitorkitManager: MonitorkitManager
+
+    override fun onCreate() {
+        super.onCreate()
+        // Register your provider
+        monitorkitManager.addProvider(LogMonitorProvider())
+    }
+}
 ```
 
-### Run showcase instrumented tests
-```bash
-./gradlew :showcase:connectedAndroidTest
+### 3. Track Events and Metrics
+Use the manager anywhere in your app to record data.
+
+```kotlin
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    @Inject lateinit var monitorkitManager: MonitorkitManager
+
+    fun onButtonClicked() {
+        monitorkitManager.trackEvent("button_clicked", mapOf("id" to "save_btn"))
+    }
+}
 ```
 
-## Development Workflow
+## 📂 Project Structure
 
-1. **Add library code** to `library/src/main/java/es/joshluq/monitorkit/`
-2. **Write unit tests** in `library/src/test/java/es/joshluq/monitorkit/`
-3. **Write instrumented tests** in `library/src/androidTest/java/es/joshluq/monitorkit/`
-4. **Integrate the library** in the showcase app at `showcase/src/main/java/es.joshluq.monitorkit/showcase/` to validate the consumer experience
-5. **Add showcase tests** in `showcase/src/test/java/es.joshluq.monitorkit/showcase/` or `showcase/src/androidTest/java/es.joshluq.monitorkit/showcase/`
-6. **Use the showcase app** to develop and test features in a real Android environment
+- `:monitorkit`: The core library module.
+    - `sdk`: Public API and `MonitorkitManager`.
+    - `domain`: Pure business logic (Models, UseCases, Repository Interfaces).
+    - `data`: Implementation details (Repository, DataSource, Provider Abstractions).
+- `:showcase`: Sample application demonstrating Hilt integration and custom providers.
 
-**Note:** The package structure is automatically created during template generation. All source files are organized with the correct package structure from the start.
+## 🧪 Quality Assurance
 
-This Consumer-Driven pattern ensures your library API is always tested in a realistic consumer context.
+- **KDocs**: 100% API documentation.
+- **Unit Testing**: Robust suite using **JUnit**, **MockK**, and **Coroutines Test**.
+- **Concurrency**: High-performance thread-safe state management using `CopyOnWriteArrayList`.
 
-## Configuration
+---
 
-This generated project includes a `project-config.properties` file at the project root with overridable values:
-
-- `catalogVersion` : the version coordinate used by the version catalog (e.g. `es.joshluq.kit.pluginkit:catalog:0.0.1-SNAPSHOT`).
-- `libraryVersion` : the default version for the `:library` artifact (e.g. `1.0.0`).
-
-Edit `project-config.properties` in the generated project to change these values without modifying build scripts directly.
+*Developed with focus on performance and reliability.*

@@ -1,0 +1,73 @@
+package es.joshluq.monitorkit.sdk
+
+import es.joshluq.monitorkit.data.provider.MonitorProvider
+import es.joshluq.monitorkit.domain.model.MetricType
+import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
+import es.joshluq.monitorkit.domain.usecase.NoneOutput
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import kotlinx.coroutines.flow.flowOf
+import org.junit.Before
+import org.junit.Test
+
+class MonitorkitManagerTest {
+
+    private lateinit var monitorkitManager: MonitorkitManager
+    private val addProviderUseCase = mockk<AddProviderUseCase>()
+    private val trackEventUseCase = mockk<TrackEventUseCase>()
+    private val trackMetricUseCase = mockk<TrackMetricUseCase>()
+
+    @Before
+    fun setUp() {
+        monitorkitManager = MonitorkitManager(
+            addProviderUseCase,
+            trackEventUseCase,
+            trackMetricUseCase
+        )
+    }
+
+    @Test
+    fun `addProvider should invoke addProviderUseCase`() {
+        // Given
+        val provider = mockk<MonitorProvider>()
+        every { addProviderUseCase(any()) } returns flowOf(NoneOutput)
+
+        // When
+        monitorkitManager.addProvider(provider)
+
+        // Then
+        verify(exactly = 1) { addProviderUseCase(any()) }
+    }
+
+    @Test
+    fun `trackEvent should invoke trackEventUseCase`() {
+        // Given
+        val eventName = "test_event"
+        val properties = mapOf("key" to "value")
+        every { trackEventUseCase(any()) } returns flowOf(NoneOutput)
+
+        // When
+        monitorkitManager.trackEvent(eventName, properties)
+
+        // Then
+        verify(exactly = 1) { trackEventUseCase(any()) }
+    }
+
+    @Test
+    fun `trackMetric should invoke trackMetricUseCase`() {
+        // Given
+        val type = MetricType.CPU
+        val value = 45.5
+        val unit = "%"
+        every { trackMetricUseCase(any()) } returns flowOf(NoneOutput)
+
+        // When
+        monitorkitManager.trackMetric(type, value, unit)
+
+        // Then
+        verify(exactly = 1) { trackMetricUseCase(any()) }
+    }
+}
