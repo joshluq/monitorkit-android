@@ -16,7 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
-import es.joshluq.monitorkit.domain.model.MetricType
+import es.joshluq.monitorkit.domain.model.PerformanceMetric
+import es.joshluq.monitorkit.domain.model.ResourceType
 import es.joshluq.monitorkit.sdk.MonitorkitManager
 import es.joshluq.monitorkit.showcase.ui.theme.ShowcaseTheme
 import javax.inject.Inject
@@ -38,8 +39,20 @@ class MainActivity : ComponentActivity() {
                         onTrackEvent = {
                             monitorkitManager.trackEvent("button_clicked", mapOf("screen" to "main"))
                         },
-                        onTrackMetric = {
-                            monitorkitManager.trackMetric(MetricType.CPU, 25.0, "%")
+                        onTrackResource = {
+                            monitorkitManager.trackMetric(
+                                PerformanceMetric.Resource(ResourceType.CPU, 25.0, "%")
+                            )
+                        },
+                        onTrackNetwork = {
+                            monitorkitManager.trackMetric(
+                                PerformanceMetric.Network("https://api.example.com/data", "GET", 150L)
+                            )
+                        },
+                        onTrackScreen = {
+                            monitorkitManager.trackMetric(
+                                PerformanceMetric.ScreenLoad("MainDashboard", 450L)
+                            )
                         }
                     )
                 }
@@ -52,7 +65,9 @@ class MainActivity : ComponentActivity() {
 fun MonitorScreen(
     modifier: Modifier = Modifier,
     onTrackEvent: () -> Unit,
-    onTrackMetric: () -> Unit
+    onTrackResource: () -> Unit,
+    onTrackNetwork: () -> Unit,
+    onTrackScreen: () -> Unit
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -65,8 +80,16 @@ fun MonitorScreen(
             Text(text = "Track Custom Event")
         }
         
-        Button(onClick = onTrackMetric, modifier = Modifier.padding(8.dp)) {
-            Text(text = "Track CPU Metric")
+        Button(onClick = onTrackResource, modifier = Modifier.padding(8.dp)) {
+            Text(text = "Track Resource (CPU)")
+        }
+
+        Button(onClick = onTrackNetwork, modifier = Modifier.padding(8.dp)) {
+            Text(text = "Track Network Call")
+        }
+
+        Button(onClick = onTrackScreen, modifier = Modifier.padding(8.dp)) {
+            Text(text = "Track Screen Load")
         }
     }
 }

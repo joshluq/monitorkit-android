@@ -16,6 +16,14 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
     }
 
     override suspend fun trackMetric(metric: PerformanceMetric) {
-        Log.d("Monitorkit-Showcase", "Metric Recorded: ${metric.type} | Value: ${metric.value}${metric.unit}")
+        val logMessage = when (metric) {
+            is PerformanceMetric.Resource -> 
+                "Resource Metric: ${metric.type} | Value: ${metric.value}${metric.unit}"
+            is PerformanceMetric.Network -> 
+                "Network Metric: ${metric.method} ${metric.url} | Response Time: ${metric.responseTime}ms"
+            is PerformanceMetric.ScreenLoad -> 
+                "Screen Metric: ${metric.screenName} | Load Time: ${metric.loadTime}ms"
+        }
+        Log.d("Monitorkit-Showcase", logMessage)
     }
 }

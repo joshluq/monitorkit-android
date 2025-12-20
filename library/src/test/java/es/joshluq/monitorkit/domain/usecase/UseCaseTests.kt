@@ -1,9 +1,9 @@
 package es.joshluq.monitorkit.domain.usecase
 
 import es.joshluq.monitorkit.data.provider.MonitorProvider
-import es.joshluq.monitorkit.domain.model.MetricType
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
+import es.joshluq.monitorkit.domain.model.ResourceType
 import es.joshluq.monitorkit.domain.repository.MonitorRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -39,7 +39,7 @@ class UseCaseTests {
     fun `TrackMetricUseCase should call repository and emit NoneOutput`() = runTest {
         // Given
         val useCase = TrackMetricUseCase(repository)
-        val metric = PerformanceMetric(MetricType.CPU, 10.0, "%")
+        val metric = PerformanceMetric.Resource(ResourceType.CPU, 10.0, "%")
         val input = TrackMetricInput(metric)
         coEvery { repository.trackMetric(any(), any()) } returns Unit
 

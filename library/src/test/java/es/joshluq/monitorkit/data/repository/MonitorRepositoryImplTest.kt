@@ -2,9 +2,9 @@ package es.joshluq.monitorkit.data.repository
 
 import es.joshluq.monitorkit.data.datasource.MonitorDataSource
 import es.joshluq.monitorkit.data.provider.MonitorProvider
-import es.joshluq.monitorkit.domain.model.MetricType
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
+import es.joshluq.monitorkit.domain.model.ResourceType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -54,7 +54,7 @@ class MonitorRepositoryImplTest {
     @Test
     fun `trackMetric should delegate to dataSource`() = runTest {
         // Given
-        val metric = PerformanceMetric(MetricType.MEMORY, 100.0, "MB")
+        val metric = PerformanceMetric.Resource(ResourceType.MEMORY, 100.0, "MB")
         coEvery { dataSource.trackMetric(any(), any()) } returns Unit
 
         // When

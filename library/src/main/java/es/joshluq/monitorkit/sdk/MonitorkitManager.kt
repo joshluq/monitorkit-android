@@ -1,9 +1,8 @@
 package es.joshluq.monitorkit.sdk
 
 import es.joshluq.monitorkit.data.provider.MonitorProvider
-import es.joshluq.monitorkit.domain.model.MetricType
-import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
+import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.usecase.AddProviderInput
 import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackEventInput
@@ -64,20 +63,15 @@ class MonitorkitManager @Inject constructor(
     }
 
     /**
-     * Tracks a system performance metric.
+     * Tracks a performance metric.
      *
-     * @param type The type of metric (CPU, MEMORY).
-     * @param value The value of the metric.
-     * @param unit The unit of measurement.
+     * @param metric The performance metric to record (Resource, Network, ScreenLoad).
      * @param providerKey Optional key to target a specific provider.
      */
     fun trackMetric(
-        type: MetricType,
-        value: Double,
-        unit: String,
+        metric: PerformanceMetric,
         providerKey: String? = null
     ) {
-        val metric = PerformanceMetric(type, value, unit)
         trackMetricUseCase(TrackMetricInput(metric, providerKey))
             .launchIn(scope)
     }

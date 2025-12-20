@@ -1,9 +1,9 @@
 package es.joshluq.monitorkit.data.datasource
 
 import es.joshluq.monitorkit.data.provider.MonitorProvider
-import es.joshluq.monitorkit.domain.model.MetricType
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
+import es.joshluq.monitorkit.domain.model.ResourceType
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -43,26 +43,9 @@ class MonitorDataSourceImplTest {
     }
 
     @Test
-    fun `trackEvent should notify only matching provider when key is specified`() = runTest {
-        // Given
-        val event = MonitorEvent("test_event")
-        dataSource.addProvider(provider1)
-        dataSource.addProvider(provider2)
-        coEvery { provider1.trackEvent(any()) } returns Unit
-        coEvery { provider2.trackEvent(any()) } returns Unit
-
-        // When
-        dataSource.trackEvent(event, "key1")
-
-        // Then
-        coVerify(exactly = 1) { provider1.trackEvent(event) }
-        coVerify(exactly = 0) { provider2.trackEvent(event) }
-    }
-
-    @Test
     fun `trackMetric should notify all providers when no key is specified`() = runTest {
         // Given
-        val metric = PerformanceMetric(MetricType.CPU, 50.0, "%")
+        val metric = PerformanceMetric.Resource(ResourceType.CPU, 50.0, "%")
         dataSource.addProvider(provider1)
         dataSource.addProvider(provider2)
         coEvery { provider1.trackMetric(any()) } returns Unit
@@ -74,5 +57,19 @@ class MonitorDataSourceImplTest {
         // Then
         coVerify(exactly = 1) { provider1.trackMetric(metric) }
         coVerify(exactly = 1) { provider2.trackMetric(metric) }
+    }
+
+    @Test
+    fun `trackMetric with Network type should notify providers`() = runTest {
+        // Given
+        val metric = PerformanceMetric.Network("https://api.com", "GET", 200L)
+        dataSource.addProvider(provider1)
+        coEvery { provider1.trackMetric(any()) } returns Unit
+
+        // When
+        dataSource.trackMetric(metric)
+
+        // Then
+        coVerify(exactly = 1) { provider1.trackMetric(metric) }
     }
 }

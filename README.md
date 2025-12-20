@@ -2,20 +2,21 @@
 
 **"Data-driven decisions, not assumptions."**
 
-Monitorkit is a powerful, lightweight Android library designed for real-time performance monitoring and system health tracking. It empowers developers to move beyond guesswork by providing precise metrics on resource consumption and application behavior.
+Monitorkit is a powerful, lightweight Android library designed for real-time performance monitoring and system health tracking. It empowers developers to move beyond guesswork by providing precise metrics on resource consumption, network performance, and screen responsiveness.
 
 ## 🚀 Key Features
 
-- **Real-time Monitoring**: Track CPU and Memory usage as they happen.
+- **Resource Monitoring**: Track CPU and Memory usage.
+- **Network Insights**: Measure response times and status of API calls.
+- **Screen Performance**: Monitor loading times for activities and composables.
 - **Custom Event Tracking**: Define and monitor business-specific events.
-- **Diagnostics**: Identify performance bottlenecks before they impact users.
-- **Agnostic Design**: Integrates seamlessly without forcing third-party dependencies on your project.
-- **Multi-Provider Support**: Manage multiple data consumers (e.g., Firebase, Sentry, Custom API) through a single interface.
-- **Hilt Ready**: Built-in support for Dependency Injection using Hilt.
+- **Agnostic Design**: Integrates seamlessly without forcing third-party dependencies.
+- **Multi-Provider Support**: Route data to multiple consumers (Firebase, Sentry, etc.) simultaneously.
+- **Hilt Ready**: Full support for Dependency Injection.
 
 ## 🏗 Architecture
 
-Monitorkit follows **Clean Architecture** principles, ensuring that business logic is isolated from external frameworks and delivery mechanisms.
+Monitorkit is built using **Clean Architecture** to ensure long-term maintainability and isolation of business logic.
 
 ```mermaid
 graph TD
@@ -26,6 +27,7 @@ graph TD
     subgraph "Domain Layer"
         UC[UseCases]
         R[Repository Interface]
+        MOD[Sealed Models]
     end
 
     subgraph "Data Layer"
@@ -34,8 +36,8 @@ graph TD
         P[Provider Interface]
     end
 
-    subgraph "Consumer Application (Showcase)"
-        ImplP[LogMonitorProvider]
+    subgraph "Consumer Application"
+        ImplP[Provider Implementation]
         ExtLib[Third-party SDKs]
     end
 
@@ -51,7 +53,7 @@ graph TD
 ## 🛠 Usage Example (from Showcase)
 
 ### 1. Implement a Provider
-Create a class that implements `MonitorProvider` to route data to your preferred analytics or monitoring service.
+Route library data to your monitoring service by implementing `MonitorProvider`.
 
 ```kotlin
 class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider {
@@ -60,13 +62,17 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
     }
 
     override suspend fun trackMetric(metric: PerformanceMetric) {
-        Log.d("Monitor", "Metric: ${metric.type} = ${metric.value}")
+        when (metric) {
+            is PerformanceMetric.Resource -> Log.d("Monitor", "Resource: ${metric.type}")
+            is PerformanceMetric.Network -> Log.d("Monitor", "Network: ${metric.url}")
+            is PerformanceMetric.ScreenLoad -> Log.d("Monitor", "Screen: ${metric.screenName}")
+        }
     }
 }
 ```
 
 ### 2. Initialize and Inject
-The library is Hilt-ready. You can inject `MonitorkitManager` and configure your providers.
+The library is Hilt-ready. Simply inject `MonitorkitManager` and add your providers.
 
 ```kotlin
 @HiltAndroidApp
@@ -75,39 +81,39 @@ class ShowcaseApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // Register your provider
         monitorkitManager.addProvider(LogMonitorProvider())
     }
 }
 ```
 
-### 3. Track Events and Metrics
-Use the manager anywhere in your app to record data.
+### 3. Track Metrics
+Use the manager to record different types of performance data.
 
 ```kotlin
-@AndroidEntryPoint
-class MainActivity : ComponentActivity() {
-    @Inject lateinit var monitorkitManager: MonitorkitManager
+// Track Network latency
+monitorkitManager.trackMetric(
+    PerformanceMetric.Network("https://api.example.com", "GET", 200L)
+)
 
-    fun onButtonClicked() {
-        monitorkitManager.trackEvent("button_clicked", mapOf("id" to "save_btn"))
-    }
-}
+// Track Screen load time
+monitorkitManager.trackMetric(
+    PerformanceMetric.ScreenLoad("HomeActivity", 450L)
+)
 ```
 
 ## 📂 Project Structure
 
 - `:monitorkit`: The core library module.
-    - `sdk`: Public API and `MonitorkitManager`.
-    - `domain`: Pure business logic (Models, UseCases, Repository Interfaces).
-    - `data`: Implementation details (Repository, DataSource, Provider Abstractions).
-- `:showcase`: Sample application demonstrating Hilt integration and custom providers.
+    - `sdk`: Public API (`MonitorkitManager`).
+    - `domain`: Business logic, Repository interfaces, and Sealed Metric models.
+    - `data`: Repository implementation, DataSource, and Provider abstractions.
+- `:showcase`: A sample app demonstrating Hilt integration and multiple metric types.
 
 ## 🧪 Quality Assurance
 
-- **KDocs**: 100% API documentation.
-- **Unit Testing**: Robust suite using **JUnit**, **MockK**, and **Coroutines Test**.
-- **Concurrency**: High-performance thread-safe state management using `CopyOnWriteArrayList`.
+- **KDocs**: Complete API documentation.
+- **Unit Testing**: 100% coverage of logic using **JUnit**, **MockK**, and **Coroutines Test**.
+- **Efficiency**: Thread-safe provider management using `CopyOnWriteArrayList`.
 
 ---
 

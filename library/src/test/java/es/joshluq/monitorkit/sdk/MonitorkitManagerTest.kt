@@ -1,7 +1,8 @@
 package es.joshluq.monitorkit.sdk
 
 import es.joshluq.monitorkit.data.provider.MonitorProvider
-import es.joshluq.monitorkit.domain.model.MetricType
+import es.joshluq.monitorkit.domain.model.PerformanceMetric
+import es.joshluq.monitorkit.domain.model.ResourceType
 import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
@@ -57,15 +58,26 @@ class MonitorkitManagerTest {
     }
 
     @Test
-    fun `trackMetric should invoke trackMetricUseCase`() {
+    fun `trackMetric should invoke trackMetricUseCase with Resource metric`() {
         // Given
-        val type = MetricType.CPU
-        val value = 45.5
-        val unit = "%"
+        val metric = PerformanceMetric.Resource(ResourceType.CPU, 45.5, "%")
         every { trackMetricUseCase(any()) } returns flowOf(NoneOutput)
 
         // When
-        monitorkitManager.trackMetric(type, value, unit)
+        monitorkitManager.trackMetric(metric)
+
+        // Then
+        verify(exactly = 1) { trackMetricUseCase(any()) }
+    }
+
+    @Test
+    fun `trackMetric should invoke trackMetricUseCase with Network metric`() {
+        // Given
+        val metric = PerformanceMetric.Network("https://api.com", "GET", 200L)
+        every { trackMetricUseCase(any()) } returns flowOf(NoneOutput)
+
+        // When
+        monitorkitManager.trackMetric(metric)
 
         // Then
         verify(exactly = 1) { trackMetricUseCase(any()) }
