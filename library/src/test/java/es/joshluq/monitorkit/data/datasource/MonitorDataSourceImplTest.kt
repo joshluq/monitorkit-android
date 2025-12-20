@@ -26,6 +26,38 @@ class MonitorDataSourceImplTest {
     }
 
     @Test
+    fun `addProvider should add provider to the list`() = runTest {
+        // Given
+        val event = MonitorEvent("test_event")
+        dataSource.addProvider(provider1)
+        coEvery { provider1.trackEvent(any()) } returns Unit
+
+        // When
+        dataSource.trackEvent(event)
+
+        // Then
+        coVerify(exactly = 1) { provider1.trackEvent(event) }
+    }
+
+    @Test
+    fun `removeProvider should remove provider from the list`() = runTest {
+        // Given
+        val event = MonitorEvent("test_event")
+        dataSource.addProvider(provider1)
+        dataSource.addProvider(provider2)
+        coEvery { provider1.trackEvent(any()) } returns Unit
+        coEvery { provider2.trackEvent(any()) } returns Unit
+
+        // When
+        dataSource.removeProvider("key1")
+        dataSource.trackEvent(event)
+
+        // Then
+        coVerify(exactly = 0) { provider1.trackEvent(event) }
+        coVerify(exactly = 1) { provider2.trackEvent(event) }
+    }
+
+    @Test
     fun `trackEvent should notify all providers when no key is specified`() = runTest {
         // Given
         val event = MonitorEvent("test_event")

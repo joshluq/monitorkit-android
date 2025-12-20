@@ -14,8 +14,8 @@ The library follows **Clean Architecture** principles to ensure maintainability,
 - **Data Layer**: Defines the `MonitorProvider` interface and uses a `MonitorDataSource` with a `CopyOnWriteArrayList` for efficient, thread-safe provider management.
 
 ## Core Features
-- **MonitorkitManager**: A centralized manager that coordinates event tracking and metric collection. It supports a fluent API for adding providers dynamically.
-- **Multi-Provider Support**: Supports multiple `MonitorProvider` implementations simultaneously. Data can be routed to all providers or targeted to a specific one using a unique key.
+- **MonitorkitManager**: A centralized manager that coordinates event tracking and metric collection. It supports a fluent API for adding and removing providers dynamically.
+- **Dynamic Provider Management**: Supports multiple `MonitorProvider` implementations simultaneously. Providers can be added or removed at runtime using unique keys.
 - **Rich Metrics**:
     - **Resource**: System CPU and Memory usage.
     - **Network**: HTTP method, URL, status codes, and response latency.

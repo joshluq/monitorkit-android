@@ -21,6 +21,10 @@ class MonitorDataSourceImpl @Inject constructor() : MonitorDataSource {
         providers.add(provider)
     }
 
+    override fun removeProvider(providerKey: String) {
+        providers.removeIf { it.key == providerKey }
+    }
+
     override suspend fun trackEvent(event: MonitorEvent, providerKey: String?) {
         getProviders(providerKey).forEach { it.trackEvent(event) }
     }

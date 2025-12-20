@@ -17,6 +17,13 @@ interface MonitorRepository {
     fun addProvider(provider: MonitorProvider)
 
     /**
+     * Removes a provider from the repository by its key.
+     *
+     * @param providerKey The unique key of the provider to remove.
+     */
+    fun removeProvider(providerKey: String)
+
+    /**
      * Tracks a custom event.
      *
      * @param event The event to be tracked.

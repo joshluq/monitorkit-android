@@ -12,6 +12,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -33,9 +37,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ShowcaseTheme {
+                var isProviderActive by remember { mutableStateOf(true) }
+                
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MonitorScreen(
                         modifier = Modifier.padding(innerPadding),
+                        isProviderActive = isProviderActive,
                         onTrackEvent = {
                             monitorkitManager.trackEvent("button_clicked", mapOf("screen" to "main"))
                         },
@@ -53,6 +60,14 @@ class MainActivity : ComponentActivity() {
                             monitorkitManager.trackMetric(
                                 PerformanceMetric.ScreenLoad("MainDashboard", 450L)
                             )
+                        },
+                        onToggleProvider = {
+                            if (isProviderActive) {
+                                monitorkitManager.removeProvider("LOGCAT")
+                            } else {
+                                monitorkitManager.addProvider(LogMonitorProvider())
+                            }
+                            isProviderActive = !isProviderActive
                         }
                     )
                 }
@@ -64,10 +79,12 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MonitorScreen(
     modifier: Modifier = Modifier,
+    isProviderActive: Boolean,
     onTrackEvent: () -> Unit,
     onTrackResource: () -> Unit,
     onTrackNetwork: () -> Unit,
-    onTrackScreen: () -> Unit
+    onTrackScreen: () -> Unit,
+    onToggleProvider: () -> Unit
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -90,6 +107,10 @@ fun MonitorScreen(
 
         Button(onClick = onTrackScreen, modifier = Modifier.padding(8.dp)) {
             Text(text = "Track Screen Load")
+        }
+
+        Button(onClick = onToggleProvider, modifier = Modifier.padding(top = 32.dp)) {
+            Text(text = if (isProviderActive) "Remove Log Provider" else "Add Log Provider")
         }
     }
 }

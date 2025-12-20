@@ -17,6 +17,13 @@ interface MonitorDataSource {
     fun addProvider(provider: MonitorProvider)
 
     /**
+     * Removes a provider from the data source by its key.
+     *
+     * @param providerKey The unique key of the provider to remove.
+     */
+    fun removeProvider(providerKey: String)
+
+    /**
      * Dispatches a custom event.
      *
      * @param event The event to be tracked.

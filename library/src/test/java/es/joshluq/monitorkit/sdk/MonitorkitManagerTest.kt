@@ -4,6 +4,7 @@ import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.ResourceType
 import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
 import es.joshluq.monitorkit.domain.usecase.NoneOutput
@@ -18,6 +19,7 @@ class MonitorkitManagerTest {
 
     private lateinit var monitorkitManager: MonitorkitManager
     private val addProviderUseCase = mockk<AddProviderUseCase>()
+    private val removeProviderUseCase = mockk<RemoveProviderUseCase>()
     private val trackEventUseCase = mockk<TrackEventUseCase>()
     private val trackMetricUseCase = mockk<TrackMetricUseCase>()
 
@@ -25,6 +27,7 @@ class MonitorkitManagerTest {
     fun setUp() {
         monitorkitManager = MonitorkitManager(
             addProviderUseCase,
+            removeProviderUseCase,
             trackEventUseCase,
             trackMetricUseCase
         )
@@ -41,6 +44,19 @@ class MonitorkitManagerTest {
 
         // Then
         verify(exactly = 1) { addProviderUseCase(any()) }
+    }
+
+    @Test
+    fun `removeProvider should invoke removeProviderUseCase`() {
+        // Given
+        val providerKey = "test_key"
+        every { removeProviderUseCase(any()) } returns flowOf(NoneOutput)
+
+        // When
+        monitorkitManager.removeProvider(providerKey)
+
+        // Then
+        verify(exactly = 1) { removeProviderUseCase(any()) }
     }
 
     @Test

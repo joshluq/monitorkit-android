@@ -10,8 +10,8 @@ Monitorkit is a powerful, lightweight Android library designed for real-time per
 - **Network Insights**: Measure response times, HTTP status codes, and API call details.
 - **Screen Performance**: Monitor loading times for activities and composables.
 - **Custom Event Tracking**: Define and monitor business-specific events.
+- **Dynamic Provider Management**: Add or remove data consumers (Firebase, Sentry, etc.) at runtime.
 - **Agnostic Design**: Integrates seamlessly without forcing third-party dependencies.
-- **Multi-Provider Support**: Route data to multiple consumers (Firebase, Sentry, etc.) simultaneously.
 - **Hilt Ready**: Full support for Dependency Injection.
 
 ## 🏗 Architecture
@@ -71,19 +71,17 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
 }
 ```
 
-### 2. Initialize and Inject
-The library is Hilt-ready. Simply inject `MonitorkitManager` and add your providers.
+### 2. Manage Providers
+The library is Hilt-ready. You can inject `MonitorkitManager` and manage your providers dynamically.
 
 ```kotlin
-@HiltAndroidApp
-class ShowcaseApp : Application() {
-    @Inject lateinit var monitorkitManager: MonitorkitManager
+@Inject lateinit var monitorkitManager: MonitorkitManager
 
-    override fun onCreate() {
-        super.onCreate()
-        monitorkitManager.addProvider(LogMonitorProvider())
-    }
-}
+// Add a provider
+monitorkitManager.addProvider(LogMonitorProvider())
+
+// Remove a provider when no longer needed
+monitorkitManager.removeProvider("LOGCAT")
 ```
 
 ### 3. Track Metrics
@@ -107,7 +105,7 @@ monitorkitManager.trackMetric(
     - `sdk`: Public API (`MonitorkitManager`).
     - `domain`: Business logic, Repository interfaces, and Sealed Metric models.
     - `data`: Repository implementation, DataSource, and Provider abstractions.
-- `:showcase`: A sample app demonstrating Hilt integration and multiple metric types.
+- `:showcase`: A sample app demonstrating dynamic provider management and multiple metric types.
 
 ## 🧪 Quality Assurance
 

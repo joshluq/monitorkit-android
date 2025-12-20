@@ -5,6 +5,8 @@ import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.usecase.AddProviderInput
 import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderInput
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackEventInput
 import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
@@ -21,12 +23,14 @@ import javax.inject.Singleton
  * This manager coordinates the monitoring operations and routes them to the registered providers.
  *
  * @property addProviderUseCase Use case for adding providers.
+ * @property removeProviderUseCase Use case for removing providers.
  * @property trackEventUseCase Use case for tracking events.
  * @property trackMetricUseCase Use case for tracking metrics.
  */
 @Singleton
 class MonitorkitManager @Inject constructor(
     private val addProviderUseCase: AddProviderUseCase,
+    private val removeProviderUseCase: RemoveProviderUseCase,
     private val trackEventUseCase: TrackEventUseCase,
     private val trackMetricUseCase: TrackMetricUseCase
 ) {
@@ -41,6 +45,18 @@ class MonitorkitManager @Inject constructor(
      */
     fun addProvider(provider: MonitorProvider): MonitorkitManager {
         addProviderUseCase(AddProviderInput(provider))
+            .launchIn(scope)
+        return this
+    }
+
+    /**
+     * Removes a monitoring provider from the library.
+     *
+     * @param providerKey The unique key of the provider to remove.
+     * @return The [MonitorkitManager] instance for fluent API usage.
+     */
+    fun removeProvider(providerKey: String): MonitorkitManager {
+        removeProviderUseCase(RemoveProviderInput(providerKey))
             .launchIn(scope)
         return this
     }
