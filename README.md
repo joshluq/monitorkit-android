@@ -7,7 +7,7 @@ Monitorkit is a powerful, lightweight Android library designed for real-time per
 ## 🚀 Key Features
 
 - **Resource Monitoring**: Track CPU and Memory usage.
-- **Network Insights**: Measure response times and status of API calls.
+- **Network Insights**: Measure response times, HTTP status codes, and API call details.
 - **Screen Performance**: Monitor loading times for activities and composables.
 - **Custom Event Tracking**: Define and monitor business-specific events.
 - **Agnostic Design**: Integrates seamlessly without forcing third-party dependencies.
@@ -64,7 +64,7 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
     override suspend fun trackMetric(metric: PerformanceMetric) {
         when (metric) {
             is PerformanceMetric.Resource -> Log.d("Monitor", "Resource: ${metric.type}")
-            is PerformanceMetric.Network -> Log.d("Monitor", "Network: ${metric.url}")
+            is PerformanceMetric.Network -> Log.d("Monitor", "Network: ${metric.url} [${metric.statusCode}]")
             is PerformanceMetric.ScreenLoad -> Log.d("Monitor", "Screen: ${metric.screenName}")
         }
     }
@@ -90,9 +90,9 @@ class ShowcaseApp : Application() {
 Use the manager to record different types of performance data.
 
 ```kotlin
-// Track Network latency
+// Track Network latency and status
 monitorkitManager.trackMetric(
-    PerformanceMetric.Network("https://api.example.com", "GET", 200L)
+    PerformanceMetric.Network("https://api.example.com", "GET", 200, 150L)
 )
 
 // Track Screen load time

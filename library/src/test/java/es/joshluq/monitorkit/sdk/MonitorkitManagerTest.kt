@@ -73,7 +73,7 @@ class MonitorkitManagerTest {
     @Test
     fun `trackMetric should invoke trackMetricUseCase with Network metric`() {
         // Given
-        val metric = PerformanceMetric.Network("https://api.com", "GET", 200L)
+        val metric = PerformanceMetric.Network("https://api.com", "GET", 200, 200L)
         every { trackMetricUseCase(any()) } returns flowOf(NoneOutput)
 
         // When

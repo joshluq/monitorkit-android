@@ -62,7 +62,7 @@ class MonitorDataSourceImplTest {
     @Test
     fun `trackMetric with Network type should notify providers`() = runTest {
         // Given
-        val metric = PerformanceMetric.Network("https://api.com", "GET", 200L)
+        val metric = PerformanceMetric.Network("https://api.com", "GET", 200, 200L)
         dataSource.addProvider(provider1)
         coEvery { provider1.trackMetric(any()) } returns Unit
 

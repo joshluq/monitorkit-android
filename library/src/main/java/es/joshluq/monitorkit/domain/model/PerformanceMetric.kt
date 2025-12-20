@@ -24,11 +24,13 @@ sealed class PerformanceMetric(
      * Metric for network operations.
      * @property url The requested URL.
      * @property method HTTP method used (GET, POST, etc.).
+     * @property statusCode HTTP response status code.
      * @property responseTime Time taken in milliseconds.
      */
     data class Network(
         val url: String,
         val method: String,
+        val statusCode: Int,
         val responseTime: Long
     ) : PerformanceMetric()
 

@@ -20,7 +20,7 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
             is PerformanceMetric.Resource -> 
                 "Resource Metric: ${metric.type} | Value: ${metric.value}${metric.unit}"
             is PerformanceMetric.Network -> 
-                "Network Metric: ${metric.method} ${metric.url} | Response Time: ${metric.responseTime}ms"
+                "Network Metric: ${metric.method} ${metric.url} [${metric.statusCode}] | Response Time: ${metric.responseTime}ms"
             is PerformanceMetric.ScreenLoad -> 
                 "Screen Metric: ${metric.screenName} | Load Time: ${metric.loadTime}ms"
         }

@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                         },
                         onTrackNetwork = {
                             monitorkitManager.trackMetric(
-                                PerformanceMetric.Network("https://api.example.com/data", "GET", 150L)
+                                PerformanceMetric.Network("https://api.example.com/data", "GET", 200, 150L)
                             )
                         },
                         onTrackScreen = {
