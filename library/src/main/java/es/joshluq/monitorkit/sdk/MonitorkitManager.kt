@@ -1,8 +1,8 @@
 package es.joshluq.monitorkit.sdk
 
 import es.joshluq.monitorkit.data.provider.MonitorProvider
-import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.MonitorEvent
+import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.usecase.AddProviderInput
 import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
 import es.joshluq.monitorkit.domain.usecase.RemoveProviderInput
@@ -11,6 +11,7 @@ import es.joshluq.monitorkit.domain.usecase.TrackEventInput
 import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
 import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
+import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,16 +27,28 @@ import javax.inject.Singleton
  * @property removeProviderUseCase Use case for removing providers.
  * @property trackEventUseCase Use case for tracking events.
  * @property trackMetricUseCase Use case for tracking metrics.
+ * @property urlSanitizer Utility for sanitizing URLs in network metrics.
  */
 @Singleton
 class MonitorkitManager @Inject constructor(
     private val addProviderUseCase: AddProviderUseCase,
     private val removeProviderUseCase: RemoveProviderUseCase,
     private val trackEventUseCase: TrackEventUseCase,
-    private val trackMetricUseCase: TrackMetricUseCase
+    private val trackMetricUseCase: TrackMetricUseCase,
+    private val urlSanitizer: UrlSanitizer
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /**
+     * Configures the URL patterns for automatic sanitization of Network metrics.
+     *
+     * @param patterns List of path patterns using wildcards (`*` for segment, `**` for suffix).
+     * Example: listOf("api/users/`*`/profile", "auth/`**`")
+     **/
+    fun configureUrlPatterns(patterns: List<String>) {
+        urlSanitizer.configurePatterns(patterns)
+    }
 
     /**
      * Adds a monitoring provider to the library.
@@ -80,6 +93,7 @@ class MonitorkitManager @Inject constructor(
 
     /**
      * Tracks a performance metric.
+     * Automatically sanitizes URLs if the metric is of type [PerformanceMetric.Network].
      *
      * @param metric The performance metric to record (Resource, Network, ScreenLoad).
      * @param providerKey Optional key to target a specific provider.
@@ -88,7 +102,14 @@ class MonitorkitManager @Inject constructor(
         metric: PerformanceMetric,
         providerKey: String? = null
     ) {
-        trackMetricUseCase(TrackMetricInput(metric, providerKey))
+        val processedMetric = if (metric is PerformanceMetric.Network) {
+            val sanitizedUrl = urlSanitizer.sanitize(metric.url)
+            metric.copy(url = sanitizedUrl)
+        } else {
+            metric
+        }
+
+        trackMetricUseCase(TrackMetricInput(processedMetric, providerKey))
             .launchIn(scope)
     }
 }

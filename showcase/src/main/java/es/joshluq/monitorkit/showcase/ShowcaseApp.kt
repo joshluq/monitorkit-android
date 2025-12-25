@@ -14,8 +14,17 @@ class ShowcaseApp : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        // Initialize MonitorkitManager with a provider
+        // 1. Initialize MonitorkitManager with a provider
         monitorkitManager.addProvider(LogMonitorProvider())
+
+        // 2. Configure URL Sanitization Patterns
+        monitorkitManager.configureUrlPatterns(
+            listOf(
+                "api/users/*/profile", // Matches single segment: api/users/123/profile
+                "auth/**",             // Matches any suffix: auth/v1/login
+                "v1/catalog/*/items"   // Another example
+            )
+        )
         
         // Track an initial event
         monitorkitManager.trackEvent("app_initialized", mapOf("module" to "showcase"))

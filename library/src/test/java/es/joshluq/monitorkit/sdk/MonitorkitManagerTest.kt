@@ -8,6 +8,7 @@ import es.joshluq.monitorkit.domain.usecase.RemoveProviderUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
 import es.joshluq.monitorkit.domain.usecase.NoneOutput
+import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.junit.Before
 import org.junit.Test
 
+@Suppress("UnusedFlow")
 class MonitorkitManagerTest {
 
     private lateinit var monitorkitManager: MonitorkitManager
@@ -22,6 +24,7 @@ class MonitorkitManagerTest {
     private val removeProviderUseCase = mockk<RemoveProviderUseCase>()
     private val trackEventUseCase = mockk<TrackEventUseCase>()
     private val trackMetricUseCase = mockk<TrackMetricUseCase>()
+    private val urlSanitizer = mockk<UrlSanitizer>()
 
     @Before
     fun setUp() {
@@ -29,7 +32,8 @@ class MonitorkitManagerTest {
             addProviderUseCase,
             removeProviderUseCase,
             trackEventUseCase,
-            trackMetricUseCase
+            trackMetricUseCase,
+            urlSanitizer
         )
     }
 
@@ -87,15 +91,37 @@ class MonitorkitManagerTest {
     }
 
     @Test
-    fun `trackMetric should invoke trackMetricUseCase with Network metric`() {
+    fun `trackMetric should sanitize URL and invoke trackMetricUseCase with Network metric`() {
+            // Given
+            val originalUrl = "api/users/123"
+            val sanitizedUrl = "api/users/{id}"
+            val metric = PerformanceMetric.Network(originalUrl, "GET", 200, 200L)
+
+            every { urlSanitizer.sanitize(originalUrl) } returns sanitizedUrl
+            every { trackMetricUseCase(any()) } returns flowOf(NoneOutput)
+
+            // When
+            monitorkitManager.trackMetric(metric)
+
+            // Then
+            verify(exactly = 1) { urlSanitizer.sanitize(originalUrl) }
+            verify(exactly = 1) {
+                trackMetricUseCase(withArg {
+                    assert((it.metric as PerformanceMetric.Network).url == sanitizedUrl)
+                })
+            }
+        }
+    
+    @Test
+    fun `configureUrlPatterns should delegate to urlSanitizer`() {
         // Given
-        val metric = PerformanceMetric.Network("https://api.com", "GET", 200, 200L)
-        every { trackMetricUseCase(any()) } returns flowOf(NoneOutput)
-
+        val patterns = listOf("api/*")
+        every { urlSanitizer.configurePatterns(any()) } returns Unit
+        
         // When
-        monitorkitManager.trackMetric(metric)
-
+        monitorkitManager.configureUrlPatterns(patterns)
+        
         // Then
-        verify(exactly = 1) { trackMetricUseCase(any()) }
+        verify(exactly = 1) { urlSanitizer.configurePatterns(patterns) }
     }
 }
