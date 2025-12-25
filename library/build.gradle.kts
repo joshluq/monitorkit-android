@@ -3,12 +3,11 @@ plugins {
     alias(libs.plugins.pluginkit.android.hilt)
     alias(libs.plugins.pluginkit.quality)
     alias(libs.plugins.pluginkit.android.testing)
+    alias(libs.plugins.pluginkit.android.publishing)
 }
 
-group = "es.joshluq.monitorkit"
-
-val projectConfig = loadProjectConfig(rootProject.projectDir)
-version = projectConfig.getProperty("libraryVersion", "1.0.0")
+group = providers.gradleProperty("groupId").get()
+version = providers.gradleProperty("libraryVersion").get()
 
 android {
     namespace = "es.joshluq.monitorkit"
@@ -36,4 +35,14 @@ pluginkitQuality {
         "**.Hilt_*",
         "**.*_Provide*Factory*"
     )
+}
+
+androidPublishing {
+    repoName = "GitHubPackages"
+    repoUrl = "${providers.gradleProperty("repositoryUrl").get()}/${providers.gradleProperty("artifactId").get()}-android"
+    repoUser = System.getenv("GITHUB_ACTOR")
+    repoPassword = System.getenv("GITHUB_TOKEN")
+    version = "${project.version}${project.findProperty("versionType")}"
+    groupId = project.group.toString()
+    artifactId = providers.gradleProperty("artifactId").get()
 }
