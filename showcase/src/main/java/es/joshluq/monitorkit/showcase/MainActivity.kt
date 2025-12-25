@@ -17,6 +17,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.ResourceType
@@ -47,57 +49,69 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ShowcaseTheme {
+                val showcaseViewModel: ShowcaseViewModel = viewModel()
+                val consoleMessages by showcaseViewModel.consoleMessages.collectAsState()
+                
                 var isProviderActive by remember { mutableStateOf(true) }
                 var isNativeTracing by remember { mutableStateOf(false) }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MonitorScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        isProviderActive = isProviderActive,
-                        isNativeTracing = isNativeTracing,
-                        onTrackEvent = {
-                            monitorkitManager.trackEvent("button_clicked", mapOf("screen" to "main"))
-                        },
-                        onTrackResource = {
-                            monitorkitManager.trackMetric(
-                                PerformanceMetric.Resource(ResourceType.CPU, 25.0, "%")
-                            )
-                        },
-                        onTrackNetworkPattern = {
-                            monitorkitManager.trackMetric(
-                                PerformanceMetric.Network("api/users/88552/profile", "GET", 200, 150L)
-                            )
-                        },
-                        onTrackNetworkFallback = {
-                            monitorkitManager.trackMetric(
-                                PerformanceMetric.Network("api/orders/999/details/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", "POST", 201, 320L)
-                            )
-                        },
-                        onTrackScreen = {
-                            monitorkitManager.trackMetric(
-                                PerformanceMetric.ScreenLoad("MainDashboard", 450L)
-                            )
-                        },
-                        onSimulateTrace = {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                monitorkitManager.startTrace("image_process", mapOf("size" to "5MB"))
-                                delay(1500) // Simulate work
-                                monitorkitManager.stopTrace("image_process", mapOf("status" to "success"))
+                    Column(modifier = Modifier.padding(innerPadding)) {
+
+                        MonitorControls(
+                            modifier = Modifier.weight(2f),
+                            isProviderActive = isProviderActive,
+                            isNativeTracing = isNativeTracing,
+                            onTrackEvent = {
+                                monitorkitManager.trackEvent("button_clicked", mapOf("screen" to "main"))
+                            },
+                            onTrackResource = {
+                                monitorkitManager.trackMetric(
+                                    PerformanceMetric.Resource(ResourceType.CPU, 25.0, "%")
+                                )
+                            },
+                            onTrackNetworkPattern = {
+                                monitorkitManager.trackMetric(
+                                    PerformanceMetric.Network("api/users/88552/profile", "GET", 200, 150L)
+                                )
+                            },
+                            onTrackNetworkFallback = {
+                                monitorkitManager.trackMetric(
+                                    PerformanceMetric.Network("api/orders/999/details/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", "POST", 201, 320L)
+                                )
+                            },
+                            onTrackScreen = {
+                                monitorkitManager.trackMetric(
+                                    PerformanceMetric.ScreenLoad("MainDashboard", 450L)
+                                )
+                            },
+                            onSimulateTrace = {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    monitorkitManager.startTrace("image_process", mapOf("size" to "5MB"))
+                                    delay(1500)
+                                    monitorkitManager.stopTrace("image_process", mapOf("status" to "success"))
+                                }
+                            },
+                            onToggleProvider = {
+                                if (isProviderActive) {
+                                    monitorkitManager.removeProvider("LOGCAT")
+                                } else {
+                                    monitorkitManager.addProvider(LogMonitorProvider())
+                                }
+                                isProviderActive = !isProviderActive
+                            },
+                            onToggleNativeTracing = {
+                                isNativeTracing = !isNativeTracing
+                                monitorkitManager.setUseNativeTracing(isNativeTracing)
                             }
-                        },
-                        onToggleProvider = {
-                            if (isProviderActive) {
-                                monitorkitManager.removeProvider("LOGCAT")
-                            } else {
-                                monitorkitManager.addProvider(LogMonitorProvider())
-                            }
-                            isProviderActive = !isProviderActive
-                        },
-                        onToggleNativeTracing = {
-                            isNativeTracing = !isNativeTracing
-                            monitorkitManager.setUseNativeTracing(isNativeTracing)
-                        }
-                    )
+                        )
+
+                        MetricConsoleView(
+                            messages = consoleMessages,
+                            onClear = { showcaseViewModel.clearConsole() },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
@@ -105,7 +119,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MonitorScreen(
+fun MonitorControls(
     modifier: Modifier = Modifier,
     isProviderActive: Boolean,
     isNativeTracing: Boolean,
@@ -122,10 +136,11 @@ fun MonitorScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Monitorkit Showcase", modifier = Modifier.padding(bottom = 16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = "Monitorkit Showcase Controls")
         
         Button(onClick = onTrackEvent, modifier = Modifier.padding(4.dp)) {
             Text(text = "Track Custom Event")
