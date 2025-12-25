@@ -8,6 +8,7 @@ Monitorkit is a powerful, lightweight Android library designed for real-time per
 
 - **Resource Monitoring**: Track CPU and Memory usage.
 - **Network Insights**: Measure response times, HTTP status codes, and API call details.
+- **URL Sanitization**: Automatic masking of sensitive data (IDs, UUIDs) in URLs before reporting.
 - **Screen Performance**: Monitor loading times for activities and composables.
 - **Custom Event Tracking**: Define and monitor business-specific events.
 - **Dynamic Provider Management**: Add or remove data consumers (Firebase, Sentry, etc.) at runtime.
@@ -22,6 +23,7 @@ Monitorkit is built using **Clean Architecture** to ensure long-term maintainabi
 graph TD
     subgraph "Presentation Layer (SDK)"
         M[MonitorkitManager]
+        S[UrlSanitizer]
     end
 
     subgraph "Domain Layer"
@@ -41,6 +43,7 @@ graph TD
         ExtLib[Third-party SDKs]
     end
 
+    M --> S
     M --> UC
     UC --> R
     RepoImpl -- implements --> R
@@ -50,68 +53,61 @@ graph TD
     ImplP --> ExtLib
 ```
 
-## 🛠 Usage Example (from Showcase)
+## 🛠 Usage Example
 
-### 1. Implement a Provider
-Route library data to your monitoring service by implementing `MonitorProvider`.
+### 1. Initialize and Configure
+Inject `MonitorkitManager` and configure sanitization rules.
 
 ```kotlin
-class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider {
-    override suspend fun trackEvent(event: MonitorEvent) {
-        Log.d("Monitor", "Event: ${event.name}")
-    }
+@HiltAndroidApp
+class ShowcaseApp : Application() {
+    @Inject lateinit var monitorkitManager: MonitorkitManager
 
-    override suspend fun trackMetric(metric: PerformanceMetric) {
-        when (metric) {
-            is PerformanceMetric.Resource -> Log.d("Monitor", "Resource: ${metric.type}")
-            is PerformanceMetric.Network -> Log.d("Monitor", "Network: ${metric.url} [${metric.statusCode}]")
-            is PerformanceMetric.ScreenLoad -> Log.d("Monitor", "Screen: ${metric.screenName}")
-        }
+    override fun onCreate() {
+        super.onCreate()
+        
+        // Add Providers
+        monitorkitManager.addProvider(LogMonitorProvider())
+
+        // Configure URL Sanitization
+        monitorkitManager.configureUrlPatterns(listOf(
+            "api/users/*/profile", // Matches: api/users/123/profile
+            "auth/**"              // Matches: auth/v1/login
+        ))
     }
 }
 ```
 
-### 2. Manage Providers
-The library is Hilt-ready. You can inject `MonitorkitManager` and manage your providers dynamically.
+### 2. Track Network Metrics
+Sensitive URLs are automatically sanitized based on your patterns or generic rules.
 
 ```kotlin
-@Inject lateinit var monitorkitManager: MonitorkitManager
-
-// Add a provider
-monitorkitManager.addProvider(LogMonitorProvider())
-
-// Remove a provider when no longer needed
-monitorkitManager.removeProvider("LOGCAT")
-```
-
-### 3. Track Metrics
-Use the manager to record different types of performance data.
-
-```kotlin
-// Track Network latency and status
+// Input: https://api.example.com/api/users/88552/profile
+// Output in Provider: https://api.example.com/api/users/*/profile
 monitorkitManager.trackMetric(
-    PerformanceMetric.Network("https://api.example.com", "GET", 200, 150L)
+    PerformanceMetric.Network("https://api.example.com/api/users/88552/profile", "GET", 200, 150L)
 )
 
-// Track Screen load time
+// Input: https://api.example.com/orders/999/details
+// Output (Fallback): https://api.example.com/orders/*/details
 monitorkitManager.trackMetric(
-    PerformanceMetric.ScreenLoad("HomeActivity", 450L)
+    PerformanceMetric.Network("https://api.example.com/orders/999/details", "GET", 200, 120L)
 )
 ```
 
 ## 📂 Project Structure
 
 - `:monitorkit`: The core library module.
-    - `sdk`: Public API (`MonitorkitManager`).
+    - `sdk`: Public API (`MonitorkitManager`) and Sanitization logic.
     - `domain`: Business logic, Repository interfaces, and Sealed Metric models.
     - `data`: Repository implementation, DataSource, and Provider abstractions.
-- `:showcase`: A sample app demonstrating dynamic provider management and multiple metric types.
+- `:showcase`: A sample app demonstrating dynamic provider management and sanitization testing.
 
 ## 🧪 Quality Assurance
 
 - **KDocs**: Complete API documentation.
-- **Unit Testing**: 100% coverage of logic using **JUnit**, **MockK**, and **Coroutines Test**.
-- **Efficiency**: Thread-safe provider management using `CopyOnWriteArrayList`.
+- **Unit Testing**: 100% coverage including Regex sanitization logic.
+- **Efficiency**: Thread-safe operations.
 
 ---
 

@@ -18,8 +18,11 @@ The library follows **Clean Architecture** principles to ensure maintainability,
 - **Dynamic Provider Management**: Supports multiple `MonitorProvider` implementations simultaneously. Providers can be added or removed at runtime using unique keys.
 - **Rich Metrics**:
     - **Resource**: System CPU and Memory usage.
-    - **Network**: HTTP method, URL, status codes, and response latency.
+    - **Network**: HTTP method, URL, status codes, and response latency. Includes automatic **URL Sanitization**.
     - **ScreenLoad**: Precise measurement of screen/activity loading times.
+- **URL Sanitization**: Built-in protection for sensitive data in URLs.
+    - **Allowlist Patterns**: Matches specific paths using wildcards (`*` for segments, `**` for suffixes).
+    - **Generic Fallback**: Automatically masks UUIDs (`*`) and numeric IDs (`*`) if no pattern matches.
 - **Library Agnostic**: The core library has zero third-party dependencies. Integrations (Firebase, Sentry, etc.) are implemented in the consumer application.
 
 ## Standards
