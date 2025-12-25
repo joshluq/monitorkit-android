@@ -8,4 +8,5 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.pluginkit.quality) apply false
     alias(libs.plugins.pluginkit.android.testing) apply false
+    alias(libs.plugins.pluginkit.android.publishing) apply false
 }
