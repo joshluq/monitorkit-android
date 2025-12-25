@@ -43,6 +43,18 @@ sealed class PerformanceMetric(
         val screenName: String,
         val loadTime: Long
     ) : PerformanceMetric()
+
+    /**
+     * Metric for custom process duration (Trace).
+     * @property name The unique name/key of the trace (e.g., "login_process").
+     * @property durationMs The total duration of the process in milliseconds.
+     * @property properties Additional properties associated with the trace.
+     */
+    data class Trace(
+        val name: String,
+        val durationMs: Long,
+        val properties: Map<String, Any>? = null
+    ) : PerformanceMetric()
 }
 
 /**

@@ -1,5 +1,6 @@
 package es.joshluq.monitorkit.sdk
 
+import android.util.Log
 import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
@@ -16,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,6 +41,17 @@ class MonitorkitManager @Inject constructor(
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    
+    // Thread-safe map to store active traces
+    private val activeTraces = ConcurrentHashMap<String, TraceContext>()
+
+    /**
+     * Internal data holder for active traces.
+     */
+    private data class TraceContext(
+        val startTime: Long,
+        val properties: Map<String, Any>?
+    )
 
     /**
      * Configures the URL patterns for automatic sanitization of Network metrics.
@@ -95,21 +108,74 @@ class MonitorkitManager @Inject constructor(
      * Tracks a performance metric.
      * Automatically sanitizes URLs if the metric is of type [PerformanceMetric.Network].
      *
-     * @param metric The performance metric to record (Resource, Network, ScreenLoad).
+     * @param metric The performance metric to record (Resource, Network, ScreenLoad, Trace).
      * @param providerKey Optional key to target a specific provider.
      */
     fun trackMetric(
         metric: PerformanceMetric,
         providerKey: String? = null
     ) {
-        val processedMetric = if (metric is PerformanceMetric.Network) {
-            val sanitizedUrl = urlSanitizer.sanitize(metric.url)
-            metric.copy(url = sanitizedUrl)
-        } else {
-            metric
+        val processedMetric = when (metric) {
+            is PerformanceMetric.Network -> {
+                val sanitizedUrl = urlSanitizer.sanitize(metric.url)
+                metric.copy(url = sanitizedUrl)
+            }
+
+            else -> metric
         }
 
         trackMetricUseCase(TrackMetricInput(processedMetric, providerKey))
             .launchIn(scope)
+    }
+
+    /**
+     * Starts a custom trace timer.
+     * If the key already exists, it restarts the timer.
+     *
+     * @param traceKey Unique identifier for the trace (e.g., "image_processing").
+     * @param properties Optional initial properties.
+     */
+    fun startTrace(traceKey: String, properties: Map<String, Any>? = null) {
+        activeTraces[traceKey] = TraceContext(
+            startTime = System.currentTimeMillis(),
+            properties = properties
+        )
+    }
+
+    /**
+     * Stops a custom trace, calculates duration, and sends the metric.
+     *
+     * @param traceKey Unique identifier for the trace to stop.
+     * @param properties Optional properties to add/overwrite at the end of the trace.
+     */
+    fun stopTrace(traceKey: String, properties: Map<String, Any>? = null) {
+        val context = activeTraces.remove(traceKey)
+        
+        if (context == null) {
+            Log.w("Monitorkit", "Attempted to stop trace '$traceKey' but it was not active.")
+            return
+        }
+
+        val duration = System.currentTimeMillis() - context.startTime
+        
+        val mergedProperties = (context.properties.orEmpty() + properties.orEmpty()).takeIf { it.isNotEmpty() }
+
+        val metric = PerformanceMetric.Trace(
+            name = traceKey,
+            durationMs = duration,
+            properties = mergedProperties
+        )
+
+        trackMetric(metric)
+    }
+
+    /**
+     * Cancels an active trace without sending any metric.
+     * Useful if the traced process failed or was aborted.
+     *
+     * @param traceKey Unique identifier for the trace to cancel.
+     */
+    fun cancelTrace(traceKey: String) {
+        activeTraces.remove(traceKey)
     }
 }
