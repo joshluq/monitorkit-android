@@ -67,7 +67,7 @@ class MonitorRepositoryImplTest {
     @Test
     fun `trackMetric should delegate to dataSource`() = runTest {
         // Given
-        val metric = PerformanceMetric.Resource(ResourceType.MEMORY, 100.0, "MB")
+        val metric = PerformanceMetric.ScreenLoad("login", 100L)
         coEvery { dataSource.trackMetric(any(), any()) } returns Unit
 
         // When
