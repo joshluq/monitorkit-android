@@ -17,9 +17,24 @@ class TrackMetricUseCaseTest {
     private val useCase = TrackMetricUseCase(repository)
 
     @Test
-    fun `invoke should call repository trackMetric and emit NoneOutput`() = runTest {
+    fun `invoke should call repository trackMetric with Resource metric and emit NoneOutput`() = runTest {
         // Given
         val metric = PerformanceMetric.Resource(ResourceType.CPU, 10.0, "%")
+        val input = TrackMetricInput(metric)
+        coEvery { repository.trackMetric(any(), any()) } returns Unit
+
+        // When
+        val result = useCase(input).toList()
+
+        // Then
+        coVerify(exactly = 1) { repository.trackMetric(metric, null) }
+        assertTrue(result.first() is NoneOutput)
+    }
+
+    @Test
+    fun `invoke should call repository trackMetric with Trace metric and emit NoneOutput`() = runTest {
+        // Given
+        val metric = PerformanceMetric.Trace("login_process", 1500L, mapOf("user_type" to "admin"))
         val input = TrackMetricInput(metric)
         coEvery { repository.trackMetric(any(), any()) } returns Unit
 

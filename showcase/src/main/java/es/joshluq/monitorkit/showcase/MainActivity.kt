@@ -30,6 +30,10 @@ import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.ResourceType
 import es.joshluq.monitorkit.sdk.MonitorkitManager
 import es.joshluq.monitorkit.showcase.ui.theme.ShowcaseTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -44,11 +48,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             ShowcaseTheme {
                 var isProviderActive by remember { mutableStateOf(true) }
-                
+                var isNativeTracing by remember { mutableStateOf(false) }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MonitorScreen(
                         modifier = Modifier.padding(innerPadding),
                         isProviderActive = isProviderActive,
+                        isNativeTracing = isNativeTracing,
                         onTrackEvent = {
                             monitorkitManager.trackEvent("button_clicked", mapOf("screen" to "main"))
                         },
@@ -58,13 +64,11 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         onTrackNetworkPattern = {
-                            // Should match pattern: api/users/*/profile
                             monitorkitManager.trackMetric(
                                 PerformanceMetric.Network("api/users/88552/profile", "GET", 200, 150L)
                             )
                         },
                         onTrackNetworkFallback = {
-                            // Should fallback to: api/orders/{id}/details/{uuid}
                             monitorkitManager.trackMetric(
                                 PerformanceMetric.Network("api/orders/999/details/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", "POST", 201, 320L)
                             )
@@ -74,6 +78,13 @@ class MainActivity : ComponentActivity() {
                                 PerformanceMetric.ScreenLoad("MainDashboard", 450L)
                             )
                         },
+                        onSimulateTrace = {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                monitorkitManager.startTrace("image_process", mapOf("size" to "5MB"))
+                                delay(1500) // Simulate work
+                                monitorkitManager.stopTrace("image_process", mapOf("status" to "success"))
+                            }
+                        },
                         onToggleProvider = {
                             if (isProviderActive) {
                                 monitorkitManager.removeProvider("LOGCAT")
@@ -81,6 +92,10 @@ class MainActivity : ComponentActivity() {
                                 monitorkitManager.addProvider(LogMonitorProvider())
                             }
                             isProviderActive = !isProviderActive
+                        },
+                        onToggleNativeTracing = {
+                            isNativeTracing = !isNativeTracing
+                            monitorkitManager.setUseNativeTracing(isNativeTracing)
                         }
                     )
                 }
@@ -93,12 +108,15 @@ class MainActivity : ComponentActivity() {
 fun MonitorScreen(
     modifier: Modifier = Modifier,
     isProviderActive: Boolean,
+    isNativeTracing: Boolean,
     onTrackEvent: () -> Unit,
     onTrackResource: () -> Unit,
     onTrackNetworkPattern: () -> Unit,
     onTrackNetworkFallback: () -> Unit,
     onTrackScreen: () -> Unit,
-    onToggleProvider: () -> Unit
+    onSimulateTrace: () -> Unit,
+    onToggleProvider: () -> Unit,
+    onToggleNativeTracing: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -118,20 +136,29 @@ fun MonitorScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Network Sanitization Tests")
+        Text(text = "Network Sanitization")
 
         Button(onClick = onTrackNetworkPattern, modifier = Modifier.padding(4.dp)) {
-            Text(text = "Network: Pattern Match (User Profile)")
+            Text(text = "Pattern Match")
         }
 
         Button(onClick = onTrackNetworkFallback, modifier = Modifier.padding(4.dp)) {
-            Text(text = "Network: Generic Fallback (ID/UUID)")
+            Text(text = "Generic Fallback")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        Text(text = "Tracing Feature")
 
-        Button(onClick = onTrackScreen, modifier = Modifier.padding(4.dp)) {
-            Text(text = "Track Screen Load")
+        Button(onClick = onSimulateTrace, modifier = Modifier.padding(4.dp)) {
+            Text(text = "Simulate Trace (1.5s)")
+        }
+
+        Button(
+            onClick = onToggleNativeTracing,
+            modifier = Modifier.padding(4.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = if (isNativeTracing) Color(0xFF673AB7) else Color.Gray)
+        ) {
+            Text(text = "Mode: ${if (isNativeTracing) "Native (Provider)" else "Internal (SDK)"}")
         }
 
         Spacer(modifier = Modifier.height(24.dp))

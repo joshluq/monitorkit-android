@@ -38,6 +38,19 @@ class MonitorRepositoryImplTest {
     }
 
     @Test
+    fun `removeProvider should delegate to dataSource`() {
+        // Given
+        val key = "key"
+        every { dataSource.removeProvider(any()) } returns Unit
+
+        // When
+        repository.removeProvider(key)
+
+        // Then
+        verify(exactly = 1) { dataSource.removeProvider(key) }
+    }
+
+    @Test
     fun `trackEvent should delegate to dataSource`() = runTest {
         // Given
         val event = MonitorEvent("test_event")
@@ -62,5 +75,46 @@ class MonitorRepositoryImplTest {
 
         // Then
         coVerify(exactly = 1) { dataSource.trackMetric(metric, null) }
+    }
+
+    @Test
+    fun `startTrace should delegate to dataSource`() = runTest {
+        // Given
+        val key = "trace"
+        val props = mapOf("a" to 1)
+        coEvery { dataSource.startTrace(any(), any(), any()) } returns Unit
+
+        // When
+        repository.startTrace(key, props, null)
+
+        // Then
+        coVerify(exactly = 1) { dataSource.startTrace(key, props, null) }
+    }
+
+    @Test
+    fun `stopTrace should delegate to dataSource`() = runTest {
+        // Given
+        val key = "trace"
+        val props = mapOf("a" to 1)
+        coEvery { dataSource.stopTrace(any(), any(), any()) } returns Unit
+
+        // When
+        repository.stopTrace(key, props, null)
+
+        // Then
+        coVerify(exactly = 1) { dataSource.stopTrace(key, props, null) }
+    }
+
+    @Test
+    fun `cancelTrace should delegate to dataSource`() = runTest {
+        // Given
+        val key = "trace"
+        coEvery { dataSource.cancelTrace(any(), any()) } returns Unit
+
+        // When
+        repository.cancelTrace(key, null)
+
+        // Then
+        coVerify(exactly = 1) { dataSource.cancelTrace(key, null) }
     }
 }

@@ -92,16 +92,49 @@ class MonitorDataSourceImplTest {
     }
 
     @Test
-    fun `trackMetric with Network type should notify providers`() = runTest {
+    fun `startTrace should notify all providers`() = runTest {
         // Given
-        val metric = PerformanceMetric.Network("https://api.com", "GET", 200, 200L)
+        val traceKey = "trace_1"
+        val props = mapOf("a" to 1)
         dataSource.addProvider(provider1)
-        coEvery { provider1.trackMetric(any()) } returns Unit
+        dataSource.addProvider(provider2)
+        coEvery { provider1.startTrace(any(), any()) } returns Unit
+        coEvery { provider2.startTrace(any(), any()) } returns Unit
 
         // When
-        dataSource.trackMetric(metric)
+        dataSource.startTrace(traceKey, props, null)
 
         // Then
-        coVerify(exactly = 1) { provider1.trackMetric(metric) }
+        coVerify(exactly = 1) { provider1.startTrace(traceKey, props) }
+        coVerify(exactly = 1) { provider2.startTrace(traceKey, props) }
+    }
+
+    @Test
+    fun `stopTrace should notify all providers`() = runTest {
+        // Given
+        val traceKey = "trace_1"
+        val props = mapOf("b" to 2)
+        dataSource.addProvider(provider1)
+        coEvery { provider1.stopTrace(any(), any()) } returns Unit
+
+        // When
+        dataSource.stopTrace(traceKey, props, null)
+
+        // Then
+        coVerify(exactly = 1) { provider1.stopTrace(traceKey, props) }
+    }
+
+    @Test
+    fun `cancelTrace should notify all providers`() = runTest {
+        // Given
+        val traceKey = "trace_1"
+        dataSource.addProvider(provider1)
+        coEvery { provider1.cancelTrace(any()) } returns Unit
+
+        // When
+        dataSource.cancelTrace(traceKey, null)
+
+        // Then
+        coVerify(exactly = 1) { provider1.cancelTrace(traceKey) }
     }
 }

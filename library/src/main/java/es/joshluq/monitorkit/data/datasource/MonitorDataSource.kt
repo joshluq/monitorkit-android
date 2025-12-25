@@ -38,4 +38,30 @@ interface MonitorDataSource {
      * @param providerKey Optional key to target a specific provider.
      */
     suspend fun trackMetric(metric: PerformanceMetric, providerKey: String? = null)
+
+    /**
+     * Dispatches a start trace operation to providers.
+     *
+     * @param traceKey Unique identifier for the trace.
+     * @param properties Initial properties for the trace.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?)
+
+    /**
+     * Dispatches a stop trace operation to providers.
+     *
+     * @param traceKey Unique identifier for the trace.
+     * @param properties Final properties for the trace.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?)
+
+    /**
+     * Dispatches a cancel trace operation to providers.
+     *
+     * @param traceKey Unique identifier for the trace.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    suspend fun cancelTrace(traceKey: String, providerKey: String?)
 }

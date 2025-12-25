@@ -32,4 +32,16 @@ class MonitorRepositoryImpl @Inject constructor(
     override suspend fun trackMetric(metric: PerformanceMetric, providerKey: String?) {
         dataSource.trackMetric(metric, providerKey)
     }
+
+    override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
+        dataSource.startTrace(traceKey, properties, providerKey)
+    }
+
+    override suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
+        dataSource.stopTrace(traceKey, properties, providerKey)
+    }
+
+    override suspend fun cancelTrace(traceKey: String, providerKey: String?) {
+        dataSource.cancelTrace(traceKey, providerKey)
+    }
 }

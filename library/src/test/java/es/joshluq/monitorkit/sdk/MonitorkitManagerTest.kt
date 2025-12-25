@@ -3,12 +3,8 @@ package es.joshluq.monitorkit.sdk
 import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.ResourceType
-import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
-import es.joshluq.monitorkit.domain.usecase.RemoveProviderUseCase
-import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
-import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
-import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
-import es.joshluq.monitorkit.domain.usecase.NoneOutput
+import es.joshluq.monitorkit.domain.usecase.*
+import es.joshluq.monitorkit.sdk.logger.Logger
 import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
 import io.mockk.every
 import io.mockk.mockk
@@ -28,7 +24,11 @@ class MonitorkitManagerTest {
     private val removeProviderUseCase = mockk<RemoveProviderUseCase>()
     private val trackEventUseCase = mockk<TrackEventUseCase>()
     private val trackMetricUseCase = mockk<TrackMetricUseCase>()
+    private val startTraceUseCase = mockk<StartTraceUseCase>()
+    private val stopTraceUseCase = mockk<StopTraceUseCase>()
+    private val cancelTraceUseCase = mockk<CancelTraceUseCase>()
     private val urlSanitizer = mockk<UrlSanitizer>()
+    private val logger = mockk<Logger>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -37,7 +37,11 @@ class MonitorkitManagerTest {
             removeProviderUseCase,
             trackEventUseCase,
             trackMetricUseCase,
-            urlSanitizer
+            startTraceUseCase,
+            stopTraceUseCase,
+            cancelTraceUseCase,
+            urlSanitizer,
+            logger
         )
     }
 
@@ -129,16 +133,19 @@ class MonitorkitManagerTest {
         verify(exactly = 1) { urlSanitizer.configurePatterns(patterns) }
     }
 
+    // --- Internal Tracing Tests (Default Behavior) ---
+
     @Test
-    fun `startTrace and stopTrace should track a Trace metric with correct duration`() {
+    fun `INTERNAL - startTrace and stopTrace should track a Trace metric with duration`() {
         // Given
+        monitorkitManager.setUseNativeTracing(false)
         val traceKey = "test_trace"
         val slot = slot<TrackMetricInput>()
         every { trackMetricUseCase(capture(slot)) } returns flowOf(NoneOutput)
 
         // When
         monitorkitManager.startTrace(traceKey)
-        Thread.sleep(10) // Ensure some time passes
+        Thread.sleep(10)
         monitorkitManager.stopTrace(traceKey)
 
         // Then
@@ -149,13 +156,13 @@ class MonitorkitManagerTest {
     }
 
     @Test
-    fun `stopTrace with properties should merge with start properties`() {
+    fun `INTERNAL - stopTrace with properties should merge with start properties`() {
         // Given
+        monitorkitManager.setUseNativeTracing(false)
         val traceKey = "prop_trace"
-        val startProps = mapOf("startKey" to "startVal", "conflictKey" to "startVal")
-        val stopProps = mapOf("stopKey" to "stopVal", "conflictKey" to "stopVal") // Should overwrite
+        val startProps = mapOf("start" to "val")
+        val stopProps = mapOf("stop" to "val")
         val slot = slot<TrackMetricInput>()
-        
         every { trackMetricUseCase(capture(slot)) } returns flowOf(NoneOutput)
 
         // When
@@ -165,15 +172,29 @@ class MonitorkitManagerTest {
         // Then
         val metric = slot.captured.metric as PerformanceMetric.Trace
         val props = metric.properties!!
-        
-        assertEquals("startVal", props["startKey"])
-        assertEquals("stopVal", props["stopKey"])
-        assertEquals("stopVal", props["conflictKey"]) // Verify overwrite priority
+        assertEquals("val", props["start"])
+        assertEquals("val", props["stop"])
     }
 
     @Test
-    fun `stopTrace on non-existent trace should not crash and not track metric`() {
+    fun `INTERNAL - cancelTrace should prevent metric from being tracked`() {
         // Given
+        monitorkitManager.setUseNativeTracing(false)
+        val traceKey = "cancelled_trace"
+
+        // When
+        monitorkitManager.startTrace(traceKey)
+        monitorkitManager.cancelTrace(traceKey)
+        monitorkitManager.stopTrace(traceKey)
+
+        // Then
+        verify(exactly = 0) { trackMetricUseCase(any()) }
+    }
+    
+    @Test
+    fun `INTERNAL - stopTrace on orphan trace should log warning via Logger`() {
+        // Given
+        monitorkitManager.setUseNativeTracing(false)
         val traceKey = "orphan_trace"
 
         // When
@@ -181,19 +202,55 @@ class MonitorkitManagerTest {
 
         // Then
         verify(exactly = 0) { trackMetricUseCase(any()) }
+        verify(exactly = 1) { logger.w(any(), any()) }
+    }
+
+    // --- Native Tracing Tests ---
+
+    @Test
+    fun `NATIVE - startTrace should delegate to StartTraceUseCase`() {
+        // Given
+        monitorkitManager.setUseNativeTracing(true)
+        val traceKey = "native_trace"
+        val props = mapOf("key" to "val")
+        every { startTraceUseCase(any()) } returns flowOf(NoneOutput)
+
+        // When
+        monitorkitManager.startTrace(traceKey, props)
+
+        // Then
+        verify(exactly = 1) { startTraceUseCase(StartTraceInput(traceKey, props)) }
+        // Verify internal map logic was skipped (no interactions with trackMetricUseCase implies logic flow)
+        verify(exactly = 0) { trackMetricUseCase(any()) }
     }
 
     @Test
-    fun `cancelTrace should prevent metric from being tracked`() {
+    fun `NATIVE - stopTrace should delegate to StopTraceUseCase`() {
         // Given
-        val traceKey = "cancelled_trace"
+        monitorkitManager.setUseNativeTracing(true)
+        val traceKey = "native_trace"
+        val props = mapOf("key" to "val")
+        every { stopTraceUseCase(any()) } returns flowOf(NoneOutput)
 
         // When
-        monitorkitManager.startTrace(traceKey)
-        monitorkitManager.cancelTrace(traceKey)
-        monitorkitManager.stopTrace(traceKey) // Should be treated as orphan now
+        monitorkitManager.stopTrace(traceKey, props)
 
         // Then
-        verify(exactly = 0) { trackMetricUseCase(any()) }
+        verify(exactly = 1) { stopTraceUseCase(StopTraceInput(traceKey, props)) }
+        verify(exactly = 0) { trackMetricUseCase(any()) } // Should NOT send a generic metric
+    }
+
+    @Test
+    fun `NATIVE - cancelTrace should delegate to CancelTraceUseCase`() {
+        // Given
+        monitorkitManager.setUseNativeTracing(true)
+        val traceKey = "native_trace"
+        every { cancelTraceUseCase(any()) } returns flowOf(NoneOutput)
+
+        // When
+        monitorkitManager.cancelTrace(traceKey)
+
+        // Then
+        verify(exactly = 1) { cancelTraceUseCase(CancelTraceInput(traceKey)) }
     }
 }

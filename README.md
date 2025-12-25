@@ -2,15 +2,15 @@
 
 **"Data-driven decisions, not assumptions."**
 
-Monitorkit is a powerful, lightweight Android library designed for real-time performance monitoring and system health tracking. It empowers developers to move beyond guesswork by providing precise metrics on resource consumption, network performance, and screen responsiveness.
+Monitorkit is a powerful, lightweight Android library designed for real-time performance monitoring and system health tracking. It empowers developers to move beyond guesswork by providing precise metrics on resource consumption, network performance, screen responsiveness, and custom process durations.
 
 ## 🚀 Key Features
 
 - **Resource Monitoring**: Track CPU and Memory usage.
+- **Custom Tracing**: Measure the duration of specific processes (e.g., image processing, login). Supports both internal calculation and native provider delegation.
 - **Network Insights**: Measure response times, HTTP status codes, and API call details.
 - **URL Sanitization**: Automatic masking of sensitive data (IDs, UUIDs) in URLs before reporting.
 - **Screen Performance**: Monitor loading times for activities and composables.
-- **Custom Event Tracking**: Define and monitor business-specific events.
 - **Dynamic Provider Management**: Add or remove data consumers (Firebase, Sentry, etc.) at runtime.
 - **Agnostic Design**: Integrates seamlessly without forcing third-party dependencies.
 - **Hilt Ready**: Full support for Dependency Injection.
@@ -78,21 +78,29 @@ class ShowcaseApp : Application() {
 }
 ```
 
-### 2. Track Network Metrics
-Sensitive URLs are automatically sanitized based on your patterns or generic rules.
+### 2. Custom Tracing (Measure Duration)
+You can measure how long a process takes.
 
 ```kotlin
-// Input: https://api.example.com/api/users/88552/profile
-// Output in Provider: https://api.example.com/api/users/*/profile
-monitorkitManager.trackMetric(
-    PerformanceMetric.Network("https://api.example.com/api/users/88552/profile", "GET", 200, 150L)
-)
+// Start the timer
+monitorkitManager.startTrace("image_compression", mapOf("format" to "png"))
 
-// Input: https://api.example.com/orders/999/details
-// Output (Fallback): https://api.example.com/orders/*/details
+// ... do heavy work ...
+
+// Stop the timer and send the metric
+monitorkitManager.stopTrace("image_compression", mapOf("status" to "success"))
+```
+
+*Note: You can enable `setUseNativeTracing(true)` to delegate start/stop calls directly to providers (e.g., for Firebase Performance Traces).*
+
+### 3. Track Network Metrics
+Sensitive URLs are automatically sanitized.
+
+```kotlin
 monitorkitManager.trackMetric(
     PerformanceMetric.Network("https://api.example.com/orders/999/details", "GET", 200, 120L)
 )
+// Output: https://api.example.com/orders/*/details
 ```
 
 ## 📂 Project Structure
@@ -101,13 +109,13 @@ monitorkitManager.trackMetric(
     - `sdk`: Public API (`MonitorkitManager`) and Sanitization logic.
     - `domain`: Business logic, Repository interfaces, and Sealed Metric models.
     - `data`: Repository implementation, DataSource, and Provider abstractions.
-- `:showcase`: A sample app demonstrating dynamic provider management and sanitization testing.
+- `:showcase`: A sample app demonstrating dynamic provider management, tracing, and sanitization.
 
 ## 🧪 Quality Assurance
 
 - **KDocs**: Complete API documentation.
-- **Unit Testing**: 100% coverage including Regex sanitization logic.
-- **Efficiency**: Thread-safe operations.
+- **Unit Testing**: 100% coverage including Tracing logic and Regex sanitization.
+- **Efficiency**: Thread-safe provider management using `CopyOnWriteArrayList` and `ConcurrentHashMap`.
 
 ---
 

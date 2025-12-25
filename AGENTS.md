@@ -3,7 +3,7 @@
 "Data-driven decisions, not assumptions."
 
 ## Overview
-Monitorkit is a specialized library for real-time performance monitoring and system health. It enables developers to track custom events, measure system resource usage (CPU/Memory), monitor network performance (including status codes and response times), and diagnose screen loading times to ensure a smooth, optimized user experience.
+Monitorkit is a specialized library for real-time performance monitoring and system health. It enables developers to track custom events, measure system resource usage (CPU/Memory), monitor network performance (including status codes and response times), diagnose screen loading times, and measure custom process durations (traces) to ensure a smooth, optimized user experience.
 
 ## Architecture
 The library follows **Clean Architecture** principles to ensure maintainability, scalability, and testability.
@@ -16,10 +16,14 @@ The library follows **Clean Architecture** principles to ensure maintainability,
 ## Core Features
 - **MonitorkitManager**: A centralized manager that coordinates event tracking and metric collection. It supports a fluent API for adding and removing providers dynamically.
 - **Dynamic Provider Management**: Supports multiple `MonitorProvider` implementations simultaneously. Providers can be added or removed at runtime using unique keys.
+- **Custom Tracing**: 
+    - **Internal Mode**: The SDK calculates the duration and reports a `Trace` metric.
+    - **Native Mode**: Delegates `start`/`stop` calls directly to providers (e.g., for Firebase Performance Trace objects).
 - **Rich Metrics**:
     - **Resource**: System CPU and Memory usage.
     - **Network**: HTTP method, URL, status codes, and response latency. Includes automatic **URL Sanitization**.
     - **ScreenLoad**: Precise measurement of screen/activity loading times.
+    - **Trace**: Custom process durations with start/stop times.
 - **URL Sanitization**: Built-in protection for sensitive data in URLs.
     - **Allowlist Patterns**: Matches specific paths using wildcards (`*` for segments, `**` for suffixes).
     - **Generic Fallback**: Automatically masks UUIDs (`*`) and numeric IDs (`*`) if no pattern matches.

@@ -26,4 +26,24 @@ interface MonitorProvider {
      * @param metric The metric to be recorded.
      */
     suspend fun trackMetric(metric: PerformanceMetric)
+
+    /**
+     * Starts a native trace on the provider.
+     * @param traceKey Unique name of the trace.
+     * @param properties Initial properties.
+     */
+    suspend fun startTrace(traceKey: String, properties: Map<String, Any>? = null) {}
+
+    /**
+     * Stops a native trace on the provider.
+     * @param traceKey Unique name of the trace.
+     * @param properties Final properties to attach.
+     */
+    suspend fun stopTrace(traceKey: String, properties: Map<String, Any>? = null) {}
+
+    /**
+     * Cancels a native trace on the provider.
+     * @param traceKey Unique name of the trace.
+     */
+    suspend fun cancelTrace(traceKey: String) {}
 }

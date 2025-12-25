@@ -38,4 +38,30 @@ interface MonitorRepository {
      * @param providerKey Optional key to target a specific provider.
      */
     suspend fun trackMetric(metric: PerformanceMetric, providerKey: String? = null)
+
+    /**
+     * Starts a native trace on the registered providers.
+     *
+     * @param traceKey Unique identifier for the trace.
+     * @param properties Optional initial properties for the trace.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    suspend fun startTrace(traceKey: String, properties: Map<String, Any>? = null, providerKey: String? = null)
+
+    /**
+     * Stops a native trace on the registered providers.
+     *
+     * @param traceKey Unique identifier for the trace.
+     * @param properties Optional final properties for the trace.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    suspend fun stopTrace(traceKey: String, properties: Map<String, Any>? = null, providerKey: String? = null)
+
+    /**
+     * Cancels a native trace on the registered providers.
+     *
+     * @param traceKey Unique identifier for the trace.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    suspend fun cancelTrace(traceKey: String, providerKey: String? = null)
 }

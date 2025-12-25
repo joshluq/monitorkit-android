@@ -33,6 +33,18 @@ class MonitorDataSourceImpl @Inject constructor() : MonitorDataSource {
         getProviders(providerKey).forEach { it.trackMetric(metric) }
     }
 
+    override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
+        getProviders(providerKey).forEach { it.startTrace(traceKey, properties) }
+    }
+
+    override suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
+        getProviders(providerKey).forEach { it.stopTrace(traceKey, properties) }
+    }
+
+    override suspend fun cancelTrace(traceKey: String, providerKey: String?) {
+        getProviders(providerKey).forEach { it.cancelTrace(traceKey) }
+    }
+
     /**
      * Filters the providers based on the key.
      * If a key is provided, only the matching provider is returned.

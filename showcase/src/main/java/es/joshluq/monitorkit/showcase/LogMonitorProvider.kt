@@ -23,7 +23,21 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
                 "Network Metric: ${metric.method} ${metric.url} [${metric.statusCode}] | Response Time: ${metric.responseTime}ms"
             is PerformanceMetric.ScreenLoad -> 
                 "Screen Metric: ${metric.screenName} | Load Time: ${metric.loadTime}ms"
+            is PerformanceMetric.Trace ->
+                "Trace Metric (INTERNAL): ${metric.name} | Duration: ${metric.durationMs}ms | Properties: ${metric.properties}"
         }
         Log.d("Monitorkit-Showcase", logMessage)
+    }
+
+    override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?) {
+        Log.d("Monitorkit-Showcase", "Native Trace STARTED: $traceKey | Props: $properties")
+    }
+
+    override suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?) {
+        Log.d("Monitorkit-Showcase", "Native Trace STOPPED: $traceKey | Props: $properties")
+    }
+
+    override suspend fun cancelTrace(traceKey: String) {
+        Log.d("Monitorkit-Showcase", "Native Trace CANCELLED: $traceKey")
     }
 }
