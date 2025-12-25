@@ -4,7 +4,6 @@ import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.ResourceType
 import es.joshluq.monitorkit.domain.usecase.*
-import es.joshluq.monitorkit.sdk.logger.Logger
 import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
 import io.mockk.every
 import io.mockk.mockk
@@ -28,7 +27,6 @@ class MonitorkitManagerTest {
     private val stopTraceUseCase = mockk<StopTraceUseCase>()
     private val cancelTraceUseCase = mockk<CancelTraceUseCase>()
     private val urlSanitizer = mockk<UrlSanitizer>()
-    private val logger = mockk<Logger>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -40,8 +38,7 @@ class MonitorkitManagerTest {
             startTraceUseCase,
             stopTraceUseCase,
             cancelTraceUseCase,
-            urlSanitizer,
-            logger
+            urlSanitizer
         )
     }
 
@@ -202,10 +199,7 @@ class MonitorkitManagerTest {
 
         // Then
         verify(exactly = 0) { trackMetricUseCase(any()) }
-        verify(exactly = 1) { logger.w(any(), any()) }
     }
-
-    // --- Native Tracing Tests ---
 
     @Test
     fun `NATIVE - startTrace should delegate to StartTraceUseCase`() {

@@ -3,8 +3,20 @@ package es.joshluq.monitorkit.sdk
 import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
-import es.joshluq.monitorkit.domain.usecase.*
-import es.joshluq.monitorkit.sdk.logger.Logger
+import es.joshluq.monitorkit.domain.usecase.AddProviderInput
+import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.CancelTraceInput
+import es.joshluq.monitorkit.domain.usecase.CancelTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderInput
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.StartTraceInput
+import es.joshluq.monitorkit.domain.usecase.StartTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.StopTraceInput
+import es.joshluq.monitorkit.domain.usecase.StopTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackEventInput
+import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
+import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
 import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,15 +39,14 @@ class MonitorkitManager @Inject constructor(
     private val startTraceUseCase: StartTraceUseCase,
     private val stopTraceUseCase: StopTraceUseCase,
     private val cancelTraceUseCase: CancelTraceUseCase,
-    private val urlSanitizer: UrlSanitizer,
-    private val logger: Logger
+    private val urlSanitizer: UrlSanitizer
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    
+
     // Thread-safe map to store active traces for internal tracking
     private val activeTraces = ConcurrentHashMap<String, TraceContext>()
-    
+
     // Configuration flag to determine if traces should be handled natively by providers
     private var useNativeTracing: Boolean = false
 
@@ -51,7 +62,8 @@ class MonitorkitManager @Inject constructor(
      * Enables or disables the use of native provider tracing (e.g., Firebase Trace objects).
      *
      * @param enabled If true, `startTrace` and `stopTrace` calls will be delegated directly to providers.
-     *                If false (default), the SDK calculates the duration internally and sends a [PerformanceMetric.Trace].
+     *                If false (default), the SDK calculates the duration internally and
+     *                sends a [PerformanceMetric.Trace].
      */
     fun setUseNativeTracing(enabled: Boolean) {
         this.useNativeTracing = enabled
@@ -138,15 +150,10 @@ class MonitorkitManager @Inject constructor(
         if (useNativeTracing) {
             stopTraceUseCase(StopTraceInput(traceKey, properties)).launchIn(scope)
         } else {
-            val context = activeTraces.remove(traceKey)
-            
-            if (context == null) {
-                logger.w("Monitorkit", "Attempted to stop trace '$traceKey' but it was not active.")
-                return
-            }
+            val context = activeTraces.remove(traceKey) ?: return
 
             val duration = System.currentTimeMillis() - context.startTime
-            
+
             // Merge properties: End properties overwrite start properties on collision
             val mergedProperties = (context.properties.orEmpty() + properties.orEmpty()).takeIf { it.isNotEmpty() }
 

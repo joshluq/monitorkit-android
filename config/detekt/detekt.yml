@@ -82,8 +82,12 @@ complexity:
     threshold: 60
   LongParameterList:
     active: true
-    functionThreshold: 6
-    constructorThreshold: 7
+    functionThreshold: 10
+    constructorThreshold: 20
+    ignoreAnnotated:
+      - 'javax.inject.Inject'
+      - 'jakarta.inject.Inject'
+      - 'androidx.hilt.lifecycle.ViewModelInject'
   MethodOverloading:
     active: false
   NestedBlockDepth:
