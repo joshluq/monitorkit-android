@@ -18,7 +18,7 @@ class UrlSanitizer @Inject constructor() {
     private val compiledPatterns = ConcurrentHashMap<String, Regex>()
 
     private val uuidRegex = Regex("(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-    
+
     private val numberRegex = Regex("(?<=/|^)\\d+(?=/|$)")
 
     /**

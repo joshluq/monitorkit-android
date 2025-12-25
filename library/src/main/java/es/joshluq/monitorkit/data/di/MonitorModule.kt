@@ -1,13 +1,13 @@
 package es.joshluq.monitorkit.data.di
 
-import es.joshluq.monitorkit.data.datasource.MonitorDataSource
-import es.joshluq.monitorkit.data.datasource.MonitorDataSourceImpl
-import es.joshluq.monitorkit.data.repository.MonitorRepositoryImpl
-import es.joshluq.monitorkit.domain.repository.MonitorRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import es.joshluq.monitorkit.data.datasource.MonitorDataSource
+import es.joshluq.monitorkit.data.datasource.MonitorDataSourceImpl
+import es.joshluq.monitorkit.data.repository.MonitorRepositoryImpl
+import es.joshluq.monitorkit.domain.repository.MonitorRepository
 import javax.inject.Singleton
 
 /**
