@@ -40,6 +40,39 @@ interface MonitorDataSource {
     suspend fun trackMetric(metric: PerformanceMetric, providerKey: String? = null)
 
     /**
+     * Sets a global attribute for providers.
+     *
+     * @param key The attribute key.
+     * @param value The attribute value.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    fun setAttribute(key: String, value: String, providerKey: String? = null)
+
+    /**
+     * Sets multiple global attributes for providers.
+     *
+     * @param attributes A map of key-value pairs to set as attributes.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    fun setAttributes(attributes: Map<String, String>, providerKey: String? = null)
+
+    /**
+     * Removes a global attribute from providers.
+     *
+     * @param key The attribute key to remove.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    fun removeAttribute(key: String, providerKey: String? = null)
+
+    /**
+     * Removes multiple global attributes from providers.
+     *
+     * @param keys The list of attribute keys to remove.
+     * @param providerKey Optional key to target a specific provider.
+     */
+    fun removeAttributes(keys: List<String>, providerKey: String? = null)
+
+    /**
      * Dispatches a start trace operation to providers.
      *
      * @param traceKey Unique identifier for the trace.

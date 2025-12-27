@@ -10,9 +10,9 @@ Monitorkit is a powerful, lightweight Android library designed for real-time per
 - **Custom Tracing**: Measure the duration of specific processes (e.g., image processing, login). Supports both internal calculation and native provider delegation.
 - **Network Insights**: Measure response times, HTTP status codes, and API call details.
 - **URL Sanitization**: Automatic masking of sensitive data (IDs, UUIDs) in URLs before reporting.
-- **Screen Performance**: Monitor loading times for activities and composables.
+- **Global Attributes**: Set persistent metadata (User ID, Environment, Experiment ID) across all providers.
 - **Dynamic Provider Management**: Add or remove data consumers (Firebase, Sentry, etc.) at runtime.
-- **Agnostic Design**: Integrates seamlessly without forcing third-party dependencies.
+- **Showcase Console**: Built-in real-time console in the showcase module to visualize captured data.
 - **Hilt Ready**: Full support for Dependency Injection.
 
 ## 🏗 Architecture
@@ -69,10 +69,11 @@ class ShowcaseApp : Application() {
         // Add Providers
         monitorkitManager.addProvider(LogMonitorProvider())
 
-        // Configure URL Sanitization
-        monitorkitManager.configureUrlPatterns(listOf(
-            "api/users/*/profile", // Matches: api/users/123/profile
-            "auth/**"              // Matches: auth/v1/login
+        // Set Global Attributes
+        monitorkitManager.setAttribute("env", "production")
+        monitorkitManager.setAttributes(mapOf(
+            "user_tier" to "premium",
+            "app_version" to "1.0.0"
         ))
     }
 }
@@ -109,12 +110,12 @@ monitorkitManager.trackMetric(
     - `sdk`: Public API (`MonitorkitManager`) and Sanitization logic.
     - `domain`: Business logic, Repository interfaces, and Sealed Metric models.
     - `data`: Repository implementation, DataSource, and Provider abstractions.
-- `:showcase`: A sample app demonstrating dynamic provider management, tracing, and sanitization.
+- `:showcase`: A sample app demonstrating dynamic provider management, tracing, and a **real-time metric console**.
 
 ## 🧪 Quality Assurance
 
 - **KDocs**: Complete API documentation.
-- **Unit Testing**: 100% coverage including Tracing logic and Regex sanitization.
+- **Unit Testing**: 100% coverage including Tracing, Sanitization, and Attribute management.
 - **Efficiency**: Thread-safe provider management using `CopyOnWriteArrayList` and `ConcurrentHashMap`.
 
 ---

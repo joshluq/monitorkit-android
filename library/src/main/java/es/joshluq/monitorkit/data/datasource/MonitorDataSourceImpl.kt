@@ -33,6 +33,22 @@ class MonitorDataSourceImpl @Inject constructor() : MonitorDataSource {
         getProviders(providerKey).forEach { it.trackMetric(metric) }
     }
 
+    override fun setAttribute(key: String, value: String, providerKey: String?) {
+        getProviders(providerKey).forEach { it.setAttribute(key, value) }
+    }
+
+    override fun setAttributes(attributes: Map<String, String>, providerKey: String?) {
+        getProviders(providerKey).forEach { it.setAttributes(attributes) }
+    }
+
+    override fun removeAttribute(key: String, providerKey: String?) {
+        getProviders(providerKey).forEach { it.removeAttribute(key) }
+    }
+
+    override fun removeAttributes(keys: List<String>, providerKey: String?) {
+        getProviders(providerKey).forEach { it.removeAttributes(keys) }
+    }
+
     override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
         getProviders(providerKey).forEach { it.startTrace(traceKey, properties) }
     }

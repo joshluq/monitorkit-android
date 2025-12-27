@@ -26,6 +26,10 @@ class MonitorkitManagerTest {
     private val startTraceUseCase = mockk<StartTraceUseCase>()
     private val stopTraceUseCase = mockk<StopTraceUseCase>()
     private val cancelTraceUseCase = mockk<CancelTraceUseCase>()
+    private val setAttributeUseCase = mockk<SetAttributeUseCase>()
+    private val setAttributesUseCase = mockk<SetAttributesUseCase>()
+    private val removeAttributeUseCase = mockk<RemoveAttributeUseCase>()
+    private val removeAttributesUseCase = mockk<RemoveAttributesUseCase>()
     private val urlSanitizer = mockk<UrlSanitizer>()
 
     @Before
@@ -38,9 +42,47 @@ class MonitorkitManagerTest {
             startTraceUseCase,
             stopTraceUseCase,
             cancelTraceUseCase,
+            setAttributeUseCase,
+            setAttributesUseCase,
+            removeAttributeUseCase,
+            removeAttributesUseCase,
             urlSanitizer
         )
     }
+
+    // --- Attribute Tests ---
+
+    @Test
+    fun `setAttribute should invoke setAttributeUseCase`() {
+        every { setAttributeUseCase(any()) } returns flowOf(NoneOutput)
+        monitorkitManager.setAttribute("key", "value")
+        verify(exactly = 1) { setAttributeUseCase(SetAttributeInput("key", "value")) }
+    }
+
+    @Test
+    fun `setAttributes should invoke setAttributesUseCase`() {
+        val attributes = mapOf("a" to "1", "b" to "2")
+        every { setAttributesUseCase(any()) } returns flowOf(NoneOutput)
+        monitorkitManager.setAttributes(attributes)
+        verify(exactly = 1) { setAttributesUseCase(SetAttributesInput(attributes)) }
+    }
+
+    @Test
+    fun `removeAttribute should invoke removeAttributeUseCase`() {
+        every { removeAttributeUseCase(any()) } returns flowOf(NoneOutput)
+        monitorkitManager.removeAttribute("key")
+        verify(exactly = 1) { removeAttributeUseCase(RemoveAttributeInput("key")) }
+    }
+
+    @Test
+    fun `removeAttributes should invoke removeAttributesUseCase`() {
+        val keys = listOf("a", "b")
+        every { removeAttributesUseCase(any()) } returns flowOf(NoneOutput)
+        monitorkitManager.removeAttributes(keys)
+        verify(exactly = 1) { removeAttributesUseCase(RemoveAttributesInput(keys)) }
+    }
+
+    // --- Basic Features Tests ---
 
     @Test
     fun `addProvider should invoke addProviderUseCase`() {
