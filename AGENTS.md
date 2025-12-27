@@ -16,7 +16,7 @@ The library follows **Clean Architecture** principles to ensure maintainability,
 ## Core Features
 - **MonitorkitManager**: A centralized manager that coordinates event tracking and metric collection. It supports a fluent API for adding/removing providers and managing global attributes.
 - **Dynamic Provider Management**: Supports multiple `MonitorProvider` implementations simultaneously. Providers can be added or removed at runtime using unique keys.
-- **Global Attributes**: persistent key-value pairs that can be set at the provider level to enrich all subsequent events and metrics with context (e.g., user IDs, feature flags).
+- **Global Attributes**: Persistent key-value pairs that can be set at the provider level to enrich all subsequent events and metrics with context (e.g., user IDs, feature flags).
 - **Custom Tracing**: 
     - **Internal Mode**: The SDK calculates the duration and reports a `Trace` metric.
     - **Native Mode**: Delegates `start`/`stop` calls directly to providers (e.g., for Firebase Performance Trace objects).
