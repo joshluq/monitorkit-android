@@ -12,11 +12,6 @@ import javax.inject.Singleton
 /**
  * A UI-specific implementation of [MonitorProvider] that enables real-time visualization
  * of monitoring data within the application.
- *
- * Instead of sending data to an external service, it emits events and metrics into a
- * [SharedFlow] that can be consumed by UI components (like a ViewModel).
- *
- * @property key Unique identifier for this provider.
  */
 @Singleton
 class UiMonitorProvider @Inject constructor() : MonitorProvider {
@@ -51,7 +46,7 @@ class UiMonitorProvider @Inject constructor() : MonitorProvider {
                 "SCREEN: ${metric.screenName} loaded in ${metric.loadTime}ms"
             }
             is PerformanceMetric.Trace -> {
-                "TRACE: ${metric.name} duration: ${metric.durationMs}ms"
+                "TRACE: ${metric.name} duration: ${metric.durationMs}ms | Props: ${metric.properties}"
             }
         }
         
@@ -65,12 +60,30 @@ class UiMonitorProvider @Inject constructor() : MonitorProvider {
         _metricsFlow.emit(ConsoleMessage(type, message))
     }
 
+    override fun setAttribute(key: String, value: String) {
+        _metricsFlow.tryEmit(
+            ConsoleMessage(
+                type = MessageType.EVENT,
+                text = "ATTR SET: $key = $value"
+            )
+        )
+    }
+
+    override fun removeAttribute(key: String) {
+        _metricsFlow.tryEmit(
+            ConsoleMessage(
+                type = MessageType.EVENT,
+                text = "ATTR REMOVED: $key"
+            )
+        )
+    }
+
     override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?) {
-        _metricsFlow.emit(ConsoleMessage(MessageType.TRACE, "NATIVE START: $traceKey"))
+        _metricsFlow.emit(ConsoleMessage(MessageType.TRACE, "NATIVE START: $traceKey | Props: $properties"))
     }
 
     override suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?) {
-        _metricsFlow.emit(ConsoleMessage(MessageType.TRACE, "NATIVE STOP: $traceKey"))
+        _metricsFlow.emit(ConsoleMessage(MessageType.TRACE, "NATIVE STOP: $traceKey | Props: $properties"))
     }
 
     override suspend fun cancelTrace(traceKey: String) {

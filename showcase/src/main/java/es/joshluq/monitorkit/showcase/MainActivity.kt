@@ -92,6 +92,15 @@ class MainActivity : ComponentActivity() {
                                     monitorkitManager.stopTrace("image_process", mapOf("status" to "success"))
                                 }
                             },
+                            onSetAttributes = {
+                                monitorkitManager.setAttributes(mapOf(
+                                    "user_tier" to "premium",
+                                    "app_theme" to "dark"
+                                ))
+                            },
+                            onRemoveAttribute = {
+                                monitorkitManager.removeAttribute("user_tier")
+                            },
                             onToggleProvider = {
                                 if (isProviderActive) {
                                     monitorkitManager.removeProvider("LOGCAT")
@@ -129,6 +138,8 @@ fun MonitorControls(
     onTrackNetworkFallback: () -> Unit,
     onTrackScreen: () -> Unit,
     onSimulateTrace: () -> Unit,
+    onSetAttributes: () -> Unit,
+    onRemoveAttribute: () -> Unit,
     onToggleProvider: () -> Unit,
     onToggleNativeTracing: () -> Unit
 ) {
@@ -162,7 +173,15 @@ fun MonitorControls(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Tracing Feature")
+        Text(text = "Attributes & Tracing")
+
+        Button(onClick = onSetAttributes, modifier = Modifier.padding(4.dp)) {
+            Text(text = "Set Global Attributes")
+        }
+
+        Button(onClick = onRemoveAttribute, modifier = Modifier.padding(4.dp)) {
+            Text(text = "Remove 'user_tier' Attribute")
+        }
 
         Button(onClick = onSimulateTrace, modifier = Modifier.padding(4.dp)) {
             Text(text = "Simulate Trace (1.5s)")
