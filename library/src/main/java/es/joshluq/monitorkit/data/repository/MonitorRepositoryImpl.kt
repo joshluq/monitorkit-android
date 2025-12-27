@@ -33,6 +33,28 @@ class MonitorRepositoryImpl @Inject constructor(
         dataSource.trackMetric(metric, providerKey)
     }
 
+    override fun setAttribute(key: String, value: String, providerKey: String?) {
+        dataSource.setAttribute(key, value, providerKey)
+    }
+
+    override fun setAttributes(
+        attributes: Map<String, String>,
+        providerKey: String?
+    ) {
+        dataSource.setAttributes(attributes, providerKey)
+    }
+
+    override fun removeAttribute(key: String, providerKey: String?) {
+        dataSource.removeAttribute(key, providerKey)
+    }
+
+    override fun removeAttributes(
+        keys: List<String>,
+        providerKey: String?
+    ) {
+        dataSource.removeAttributes(keys, providerKey)
+    }
+
     override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
         dataSource.startTrace(traceKey, properties, providerKey)
     }
