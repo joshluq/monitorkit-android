@@ -28,6 +28,39 @@ interface MonitorProvider {
     suspend fun trackMetric(metric: PerformanceMetric)
 
     /**
+     * Sets a global attribute for this provider.
+     *
+     * @param key The attribute key.
+     * @param value The attribute value.
+     */
+    fun setAttribute(key: String, value: String) {}
+
+    /**
+     * Sets multiple global attributes for this provider.
+     *
+     * @param attributes A map of key-value pairs to set as attributes.
+     */
+    fun setAttributes(attributes: Map<String, String>) {
+        attributes.forEach { (key, value) -> setAttribute(key, value) }
+    }
+
+    /**
+     * Removes a global attribute from this provider.
+     *
+     * @param key The attribute key to remove.
+     */
+    fun removeAttribute(key: String) {}
+
+    /**
+     * Removes multiple global attributes from this provider.
+     *
+     * @param keys The list of attribute keys to remove.
+     */
+    fun removeAttributes(keys: List<String>) {
+        keys.forEach { removeAttribute(it) }
+    }
+
+    /**
      * Starts a native trace on the provider.
      * @param traceKey Unique name of the trace.
      * @param properties Initial properties.

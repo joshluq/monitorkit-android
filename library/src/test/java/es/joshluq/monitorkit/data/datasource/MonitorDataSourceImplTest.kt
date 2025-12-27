@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -55,6 +56,72 @@ class MonitorDataSourceImplTest {
         // Then
         coVerify(exactly = 0) { provider1.trackEvent(event) }
         coVerify(exactly = 1) { provider2.trackEvent(event) }
+    }
+
+    @Test
+    fun `setAttribute should notify matching providers`() {
+        // Given
+        dataSource.addProvider(provider1)
+        dataSource.addProvider(provider2)
+        every { provider1.setAttribute(any(), any()) } returns Unit
+        every { provider2.setAttribute(any(), any()) } returns Unit
+
+        // When
+        dataSource.setAttribute("key", "value", "key1")
+
+        // Then
+        verify(exactly = 1) { provider1.setAttribute("key", "value") }
+        verify(exactly = 0) { provider2.setAttribute(any(), any()) }
+    }
+
+    @Test
+    fun `setAttributes should notify all providers when no key is specified`() {
+        // Given
+        val attrs = mapOf("a" to "1", "b" to "2")
+        dataSource.addProvider(provider1)
+        dataSource.addProvider(provider2)
+        every { provider1.setAttributes(any()) } returns Unit
+        every { provider2.setAttributes(any()) } returns Unit
+
+        // When
+        dataSource.setAttributes(attrs)
+
+        // Then
+        verify(exactly = 1) { provider1.setAttributes(attrs) }
+        verify(exactly = 1) { provider2.setAttributes(attrs) }
+    }
+
+    @Test
+    fun `removeAttribute should notify all providers when no key is specified`() {
+        // Given
+        dataSource.addProvider(provider1)
+        dataSource.addProvider(provider2)
+        every { provider1.removeAttribute(any()) } returns Unit
+        every { provider2.removeAttribute(any()) } returns Unit
+
+        // When
+        dataSource.removeAttribute("key")
+
+        // Then
+        verify(exactly = 1) { provider1.removeAttribute("key") }
+        verify(exactly = 1) { provider2.removeAttribute("key") }
+    }
+
+    @Test
+    fun `removeAttributes should notify all providers when no key is specified`() {
+        // Given
+        val keys = listOf("a", "b")
+        dataSource.addProvider(provider1)
+        dataSource.addProvider(provider2)
+        every { provider1.removeAttributes(any()) } returns Unit
+        every { provider2.removeAttributes(any()) } returns Unit
+
+        // When
+        dataSource.removeAttributes(keys)
+
+        // Then
+        verify(exactly = 1) { provider1.removeAttributes(keys) }
+        verify(exactly = 1) { provider2.removeAttributes(keys) }
     }
 
     @Test
