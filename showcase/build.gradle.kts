@@ -17,5 +17,5 @@ android {
 }
 
 dependencies {
-    implementation(project(":monitorkit"))
+    implementation("es.joshluq.kit:monitorkit:1.0.0")
 }
