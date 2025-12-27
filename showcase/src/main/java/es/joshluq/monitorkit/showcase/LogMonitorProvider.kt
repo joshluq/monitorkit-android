@@ -29,6 +29,14 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
         Log.d("Monitorkit-Showcase", logMessage)
     }
 
+    override fun setAttribute(key: String, value: String) {
+        Log.d("Monitorkit-Showcase", "Attribute SET: $key = $value")
+    }
+
+    override fun removeAttribute(key: String) {
+        Log.d("Monitorkit-Showcase", "Attribute REMOVED: $key")
+    }
+
     override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?) {
         Log.d("Monitorkit-Showcase", "Native Trace STARTED: $traceKey | Props: $properties")
     }
