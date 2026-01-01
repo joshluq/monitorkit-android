@@ -5,7 +5,28 @@ import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.data.repository.MonitorRepositoryImpl
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
-import es.joshluq.monitorkit.domain.usecase.*
+import es.joshluq.monitorkit.domain.usecase.AddProviderInput
+import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.CancelTraceInput
+import es.joshluq.monitorkit.domain.usecase.CancelTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributeInput
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributeUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributesInput
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributesUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderInput
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.SetAttributeInput
+import es.joshluq.monitorkit.domain.usecase.SetAttributeUseCase
+import es.joshluq.monitorkit.domain.usecase.SetAttributesInput
+import es.joshluq.monitorkit.domain.usecase.SetAttributesUseCase
+import es.joshluq.monitorkit.domain.usecase.StartTraceInput
+import es.joshluq.monitorkit.domain.usecase.StartTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.StopTraceInput
+import es.joshluq.monitorkit.domain.usecase.StopTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackEventInput
+import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
+import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
 import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -17,30 +38,30 @@ import java.util.concurrent.ConcurrentHashMap
  * Main entry point for the Monitorkit library.
  * This manager coordinates the monitoring operations and routes them to the registered providers.
  *
- * It uses the Builder pattern for declarative and fluent configuration via [Manual Dependency Injection].
- *
- * @param builder The [Builder] instance containing the configuration.
+ * It uses the Builder pattern for declarative and fluent configuration via Manual Dependency Injection.
  */
-class MonitorkitManager private constructor(builder: Builder) {
-
-    private val addProviderUseCase = builder.addProviderUseCase
-    private val removeProviderUseCase = builder.removeProviderUseCase
-    private val trackEventUseCase = builder.trackEventUseCase
-    private val trackMetricUseCase = builder.trackMetricUseCase
-    private val startTraceUseCase = builder.startTraceUseCase
-    private val stopTraceUseCase = builder.stopTraceUseCase
-    private val cancelTraceUseCase = builder.cancelTraceUseCase
-    private val setAttributeUseCase = builder.setAttributeUseCase
-    private val setAttributesUseCase = builder.setAttributesUseCase
-    private val removeAttributeUseCase = builder.removeAttributeUseCase
-    private val removeAttributesUseCase = builder.removeAttributesUseCase
-    private val urlSanitizer = builder.urlSanitizer
+class MonitorkitManager internal constructor(
+    private val addProviderUseCase: AddProviderUseCase,
+    private val removeProviderUseCase: RemoveProviderUseCase,
+    private val trackEventUseCase: TrackEventUseCase,
+    private val trackMetricUseCase: TrackMetricUseCase,
+    private val startTraceUseCase: StartTraceUseCase,
+    private val stopTraceUseCase: StopTraceUseCase,
+    private val cancelTraceUseCase: CancelTraceUseCase,
+    private val setAttributeUseCase: SetAttributeUseCase,
+    private val setAttributesUseCase: SetAttributesUseCase,
+    private val removeAttributeUseCase: RemoveAttributeUseCase,
+    private val removeAttributesUseCase: RemoveAttributesUseCase,
+    private val urlSanitizer: UrlSanitizer,
+    private val useNativeTracing: Boolean,
+    initialProviders: List<MonitorProvider>,
+    urlPatterns: List<String>
+) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    
+
+    // Thread-safe map to store active traces for internal tracking
     private val activeTraces = ConcurrentHashMap<String, TraceContext>()
-    
-    private val useNativeTracing: Boolean = builder.useNativeTracing
 
     private data class TraceContext(
         val startTime: Long,
@@ -48,23 +69,36 @@ class MonitorkitManager private constructor(builder: Builder) {
     )
 
     init {
-        urlSanitizer.configurePatterns(builder.urlPatterns)
-        builder.providers.forEach { addProvider(it) }
+        // 1. Configure URL Sanitization Patterns
+        urlSanitizer.configurePatterns(urlPatterns)
+
+        // 2. Register initial providers
+        initialProviders.forEach { provider ->
+            addProvider(provider)
+        }
     }
 
     /**
      * Adds a monitoring provider to the library at runtime.
+     *
+     * @param provider The [MonitorProvider] implementation to add.
+     * @return The [MonitorkitManager] instance for fluent API usage.
      */
     fun addProvider(provider: MonitorProvider): MonitorkitManager {
-        addProviderUseCase(AddProviderInput(provider)).launchIn(scope)
+        addProviderUseCase(AddProviderInput(provider))
+            .launchIn(scope)
         return this
     }
 
     /**
      * Removes a monitoring provider from the library at runtime.
+     *
+     * @param providerKey The unique key of the provider to remove.
+     * @return The [MonitorkitManager] instance for fluent API usage.
      */
     fun removeProvider(providerKey: String): MonitorkitManager {
-        removeProviderUseCase(RemoveProviderInput(providerKey)).launchIn(scope)
+        removeProviderUseCase(RemoveProviderInput(providerKey))
+            .launchIn(scope)
         return this
     }
 
@@ -72,7 +106,8 @@ class MonitorkitManager private constructor(builder: Builder) {
      * Sets a global attribute for all registered providers.
      */
     fun setAttribute(key: String, value: String, providerKey: String? = null): MonitorkitManager {
-        setAttributeUseCase(SetAttributeInput(key, value, providerKey)).launchIn(scope)
+        setAttributeUseCase(SetAttributeInput(key, value, providerKey))
+            .launchIn(scope)
         return this
     }
 
@@ -80,7 +115,8 @@ class MonitorkitManager private constructor(builder: Builder) {
      * Sets multiple global attributes for all registered providers.
      */
     fun setAttributes(attributes: Map<String, String>, providerKey: String? = null): MonitorkitManager {
-        setAttributesUseCase(SetAttributesInput(attributes, providerKey)).launchIn(scope)
+        setAttributesUseCase(SetAttributesInput(attributes, providerKey))
+            .launchIn(scope)
         return this
     }
 
@@ -88,7 +124,8 @@ class MonitorkitManager private constructor(builder: Builder) {
      * Removes a global attribute from all registered providers.
      */
     fun removeAttribute(key: String, providerKey: String? = null): MonitorkitManager {
-        removeAttributeUseCase(RemoveAttributeInput(key, providerKey)).launchIn(scope)
+        removeAttributeUseCase(RemoveAttributeInput(key, providerKey))
+            .launchIn(scope)
         return this
     }
 
@@ -96,29 +133,41 @@ class MonitorkitManager private constructor(builder: Builder) {
      * Removes multiple global attributes from all registered providers.
      */
     fun removeAttributes(keys: List<String>, providerKey: String? = null): MonitorkitManager {
-        removeAttributesUseCase(RemoveAttributesInput(keys, providerKey)).launchIn(scope)
+        removeAttributesUseCase(RemoveAttributesInput(keys, providerKey))
+            .launchIn(scope)
         return this
     }
 
     /**
      * Tracks a custom event.
      */
-    fun trackEvent(name: String, properties: Map<String, Any> = emptyMap(), providerKey: String? = null) {
+    fun trackEvent(
+        name: String,
+        properties: Map<String, Any> = emptyMap(),
+        providerKey: String? = null
+    ) {
         val event = MonitorEvent(name, properties)
-        trackEventUseCase(TrackEventInput(event, providerKey)).launchIn(scope)
+        trackEventUseCase(TrackEventInput(event, providerKey))
+            .launchIn(scope)
     }
 
     /**
      * Tracks a performance metric.
+     * Automatically sanitizes URLs if the metric is of type [PerformanceMetric.Network].
      */
-    fun trackMetric(metric: PerformanceMetric, providerKey: String? = null) {
+    fun trackMetric(
+        metric: PerformanceMetric,
+        providerKey: String? = null
+    ) {
         val processedMetric = if (metric is PerformanceMetric.Network) {
             val sanitizedUrl = urlSanitizer.sanitize(metric.url)
             metric.copy(url = sanitizedUrl)
         } else {
             metric
         }
-        trackMetricUseCase(TrackMetricInput(processedMetric, providerKey)).launchIn(scope)
+
+        trackMetricUseCase(TrackMetricInput(processedMetric, providerKey))
+            .launchIn(scope)
     }
 
     /**
@@ -128,7 +177,10 @@ class MonitorkitManager private constructor(builder: Builder) {
         if (useNativeTracing) {
             startTraceUseCase(StartTraceInput(traceKey, properties)).launchIn(scope)
         } else {
-            activeTraces[traceKey] = TraceContext(System.currentTimeMillis(), properties)
+            activeTraces[traceKey] = TraceContext(
+                startTime = System.currentTimeMillis(),
+                properties = properties
+            )
         }
     }
 
@@ -140,9 +192,19 @@ class MonitorkitManager private constructor(builder: Builder) {
             stopTraceUseCase(StopTraceInput(traceKey, properties)).launchIn(scope)
         } else {
             val context = activeTraces.remove(traceKey) ?: return
+
             val duration = System.currentTimeMillis() - context.startTime
+
+            // Merge properties: End properties overwrite start properties on collision
             val mergedProperties = (context.properties.orEmpty() + properties.orEmpty()).takeIf { it.isNotEmpty() }
-            trackMetric(PerformanceMetric.Trace(traceKey, duration, mergedProperties))
+
+            val metric = PerformanceMetric.Trace(
+                name = traceKey,
+                durationMs = duration,
+                properties = mergedProperties
+            )
+
+            trackMetric(metric)
         }
     }
 
@@ -159,48 +221,70 @@ class MonitorkitManager private constructor(builder: Builder) {
 
     /**
      * Builder class for [MonitorkitManager].
-     * Instantiates all internal dependencies manually to remain framework-agnostic.
+     * Provides a fluent API for SDK configuration.
      */
     class Builder {
-        internal val providers = mutableListOf<MonitorProvider>()
-        internal var useNativeTracing = false
-        internal val urlPatterns = mutableListOf<String>()
-
-        // Manual Dependency Injection
-        private val dataSource = MonitorDataSourceImpl()
-        private val repository = MonitorRepositoryImpl(dataSource)
-        
-        internal val addProviderUseCase = AddProviderUseCase(repository)
-        internal val removeProviderUseCase = RemoveProviderUseCase(repository)
-        internal val trackEventUseCase = TrackEventUseCase(repository)
-        internal val trackMetricUseCase = TrackMetricUseCase(repository)
-        internal val startTraceUseCase = StartTraceUseCase(repository)
-        internal val stopTraceUseCase = StopTraceUseCase(repository)
-        internal val cancelTraceUseCase = CancelTraceUseCase(repository)
-        internal val setAttributeUseCase = SetAttributeUseCase(repository)
-        internal val setAttributesUseCase = SetAttributesUseCase(repository)
-        internal val removeAttributeUseCase = RemoveAttributeUseCase(repository)
-        internal val removeAttributesUseCase = RemoveAttributesUseCase(repository)
-        internal val urlSanitizer = UrlSanitizer()
+        private val providers = mutableListOf<MonitorProvider>()
+        private var useNativeTracing = false
+        private val urlPatterns = mutableListOf<String>()
 
         /**
          * Adds an initial monitoring provider.
+         *
+         * @param provider The provider implementation.
+         * @return This builder instance.
          */
-        fun addProvider(provider: MonitorProvider) = apply { providers.add(provider) }
+        fun addProvider(provider: MonitorProvider) = apply {
+            providers.add(provider)
+        }
 
         /**
-         * Enables or disables native tracing delegation.
+         * Enables or disables native tracing delegation to providers.
+         *
+         * @param enabled True to use native tracing, false for internal tracking.
+         * @return This builder instance.
          */
-        fun setUseNativeTracing(enabled: Boolean) = apply { useNativeTracing = enabled }
+        fun setUseNativeTracing(enabled: Boolean) = apply {
+            useNativeTracing = enabled
+        }
 
         /**
-         * Configures the initial URL patterns for sanitization.
+         * Configures the initial URL patterns for automatic sanitization of Network metrics.
+         *
+         * @param patterns List of path patterns using wildcards (* for segment, ** for suffix).
+         * @return This builder instance.
          */
-        fun configureUrlPatterns(patterns: List<String>) = apply { urlPatterns.addAll(patterns) }
+        fun configureUrlPatterns(patterns: List<String>) = apply {
+            urlPatterns.addAll(patterns)
+        }
 
         /**
          * Builds and returns the [MonitorkitManager] instance.
+         *
+         * @return A configured [MonitorkitManager].
          */
-        fun build(): MonitorkitManager = MonitorkitManager(this)
+        fun build(): MonitorkitManager {
+            val dataSource = MonitorDataSourceImpl()
+            val repository = MonitorRepositoryImpl(dataSource)
+            val urlSanitizer = UrlSanitizer()
+
+            return MonitorkitManager(
+                addProviderUseCase = AddProviderUseCase(repository),
+                removeProviderUseCase = RemoveProviderUseCase(repository),
+                trackEventUseCase = TrackEventUseCase(repository),
+                trackMetricUseCase = TrackMetricUseCase(repository),
+                startTraceUseCase = StartTraceUseCase(repository),
+                stopTraceUseCase = StopTraceUseCase(repository),
+                cancelTraceUseCase = CancelTraceUseCase(repository),
+                setAttributeUseCase = SetAttributeUseCase(repository),
+                setAttributesUseCase = SetAttributesUseCase(repository),
+                removeAttributeUseCase = RemoveAttributeUseCase(repository),
+                removeAttributesUseCase = RemoveAttributesUseCase(repository),
+                urlSanitizer = urlSanitizer,
+                useNativeTracing = useNativeTracing,
+                initialProviders = providers,
+                urlPatterns = urlPatterns
+            )
+        }
     }
 }
