@@ -1,8 +1,6 @@
 package es.joshluq.monitorkit.sdk.sanitizer
 
 import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Utility class responsible for sanitizing URLs before they are reported.
@@ -12,13 +10,10 @@ import javax.inject.Singleton
  * 1. **Allowlist Patterns**: Checks if the URL matches a configured pattern.
  * 2. **Generic Fallback**: Uses Regex to replace UUIDs and numeric IDs.
  */
-@Singleton
-class UrlSanitizer @Inject constructor() {
+internal class UrlSanitizer {
 
     private val compiledPatterns = ConcurrentHashMap<String, Regex>()
-
     private val uuidRegex = Regex("(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-
     private val numberRegex = Regex("(?<=/|^)\\d+(?=/|$)")
 
     /**
