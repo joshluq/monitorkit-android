@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.pluginkit.android.library)
-    alias(libs.plugins.pluginkit.android.hilt)
     alias(libs.plugins.pluginkit.quality)
     alias(libs.plugins.pluginkit.android.testing)
     alias(libs.plugins.pluginkit.android.publishing)
@@ -14,7 +13,7 @@ android {
 }
 
 dependencies {
-
+    // No third-party DI dependencies to keep the SDK agnostic
 }
 
 pluginkitQuality {
@@ -22,18 +21,10 @@ pluginkitQuality {
     sonarProjectKey = "joshluq_monitorkit-android"
     koverExclusions = listOf(
         "**.showcase.*",
-        "**.di.*",
-        "**.*_di_*",
         "**.BuildConfig",
         "**.R",
         "**.R$*",
-        "**.Dagger*",
-        "**.*_Factory",
-        "**.*_Factory*",
-        "**.*_MembersInjector",
-        "**.*_HiltModules*",
-        "**.Hilt_*",
-        "**.*_Provide*Factory*"
+        "**.*_MembersInjector"
     )
 }
 
@@ -42,7 +33,7 @@ androidPublishing {
     repoUrl = "${providers.gradleProperty("repositoryUrl").get()}/${providers.gradleProperty("artifactId").get()}-android"
     repoUser = System.getenv("GITHUB_ACTOR")
     repoPassword = System.getenv("GITHUB_TOKEN")
-    version = "${project.version}${project.findProperty("versionType")}"
+    version = "${project.version}${project.findProperty("versionType") ?: ""}"
     groupId = project.group.toString()
     artifactId = providers.gradleProperty("artifactId").get()
 }

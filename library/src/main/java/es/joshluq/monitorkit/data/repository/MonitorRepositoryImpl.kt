@@ -5,15 +5,12 @@ import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.repository.MonitorRepository
-import javax.inject.Inject
 
 /**
  * Implementation of [MonitorRepository].
  * Acts as a bridge between the domain layer and the data sources.
- *
- * @property dataSource The data source used to dispatch events and metrics.
  */
-class MonitorRepositoryImpl @Inject constructor(
+internal class MonitorRepositoryImpl(
     private val dataSource: MonitorDataSource
 ) : MonitorRepository {
 
@@ -37,10 +34,7 @@ class MonitorRepositoryImpl @Inject constructor(
         dataSource.setAttribute(key, value, providerKey)
     }
 
-    override fun setAttributes(
-        attributes: Map<String, String>,
-        providerKey: String?
-    ) {
+    override fun setAttributes(attributes: Map<String, String>, providerKey: String?) {
         dataSource.setAttributes(attributes, providerKey)
     }
 
@@ -48,10 +42,7 @@ class MonitorRepositoryImpl @Inject constructor(
         dataSource.removeAttribute(key, providerKey)
     }
 
-    override fun removeAttributes(
-        keys: List<String>,
-        providerKey: String?
-    ) {
+    override fun removeAttributes(keys: List<String>, providerKey: String?) {
         dataSource.removeAttributes(keys, providerKey)
     }
 
