@@ -25,266 +25,153 @@ class MonitorRepositoryImplTest {
 
     @Test
     fun `addProvider should delegate to dataSource`() {
-        // Given
         val provider = mockk<MonitorProvider>()
         every { dataSource.addProvider(any()) } returns Unit
-
-        // When
         repository.addProvider(provider)
-
-        // Then
         verify(exactly = 1) { dataSource.addProvider(provider) }
     }
 
     @Test
     fun `removeProvider should delegate to dataSource`() {
-        // Given
         val key = "key"
         every { dataSource.removeProvider(any()) } returns Unit
-
-        // When
         repository.removeProvider(key)
-
-        // Then
         verify(exactly = 1) { dataSource.removeProvider(key) }
     }
 
     @Test
-    fun `trackEvent should delegate to dataSource with key`() = runTest {
-        // Given
-        val event = MonitorEvent("test_event")
-        val key = "some_key"
+    fun `trackEvent with provider key should delegate to dataSource`() = runTest {
+        val event = MonitorEvent("test")
+        val key = "key"
         coEvery { dataSource.trackEvent(any(), any()) } returns Unit
-
-        // When
         repository.trackEvent(event, key)
-
-        // Then
         coVerify(exactly = 1) { dataSource.trackEvent(event, key) }
     }
 
     @Test
-    fun `trackEvent should delegate to dataSource without key`() = runTest {
-        // Given
-        val event = MonitorEvent("test_event")
+    fun `trackEvent without provider key should delegate to dataSource with null`() = runTest {
+        val event = MonitorEvent("test")
         coEvery { dataSource.trackEvent(any(), any()) } returns Unit
-
-        // When
         repository.trackEvent(event)
-
-        // Then
         coVerify(exactly = 1) { dataSource.trackEvent(event, null) }
     }
 
     @Test
-    fun `trackMetric should delegate to dataSource with key`() = runTest {
-        // Given
+    fun `trackMetric with provider key should delegate to dataSource`() = runTest {
         val metric = PerformanceMetric.ScreenLoad("login", 100L)
-        val key = "some_key"
+        val key = "key"
         coEvery { dataSource.trackMetric(any(), any()) } returns Unit
-
-        // When
         repository.trackMetric(metric, key)
-
-        // Then
         coVerify(exactly = 1) { dataSource.trackMetric(metric, key) }
     }
 
     @Test
-    fun `trackMetric should delegate to dataSource without key`() = runTest {
-        // Given
+    fun `trackMetric without provider key should delegate to dataSource with null`() = runTest {
         val metric = PerformanceMetric.ScreenLoad("login", 100L)
         coEvery { dataSource.trackMetric(any(), any()) } returns Unit
-
-        // When
         repository.trackMetric(metric)
-
-        // Then
         coVerify(exactly = 1) { dataSource.trackMetric(metric, null) }
     }
 
     @Test
-    fun `setAttribute should delegate to dataSource with key`() {
-        // Given
+    fun `setAttribute with provider key should delegate to dataSource`() {
         every { dataSource.setAttribute(any(), any(), any()) } returns Unit
-
-        // When
-        repository.setAttribute("key", "value", "provider")
-
-        // Then
-        verify(exactly = 1) { dataSource.setAttribute("key", "value", "provider") }
+        repository.setAttribute("k", "v", "key")
+        verify(exactly = 1) { dataSource.setAttribute("k", "v", "key") }
     }
 
     @Test
-    fun `setAttribute should delegate to dataSource without key`() {
-        // Given
+    fun `setAttribute without provider key should delegate to dataSource with null`() {
         every { dataSource.setAttribute(any(), any(), any()) } returns Unit
-
-        // When
-        repository.setAttribute("key", "value")
-
-        // Then
-        verify(exactly = 1) { dataSource.setAttribute("key", "value", null) }
+        repository.setAttribute("k", "v")
+        verify(exactly = 1) { dataSource.setAttribute("k", "v", null) }
     }
 
     @Test
-    fun `setAttributes should delegate to dataSource with key`() {
-        // Given
+    fun `setAttributes with provider key should delegate to dataSource`() {
         val attrs = mapOf("a" to "1")
         every { dataSource.setAttributes(any(), any()) } returns Unit
-
-        // When
-        repository.setAttributes(attrs, "provider")
-
-        // Then
-        verify(exactly = 1) { dataSource.setAttributes(attrs, "provider") }
+        repository.setAttributes(attrs, "key")
+        verify(exactly = 1) { dataSource.setAttributes(attrs, "key") }
     }
 
     @Test
-    fun `setAttributes should delegate to dataSource without key`() {
-        // Given
+    fun `setAttributes without provider key should delegate to dataSource with null`() {
         val attrs = mapOf("a" to "1")
         every { dataSource.setAttributes(any(), any()) } returns Unit
-
-        // When
         repository.setAttributes(attrs)
-
-        // Then
         verify(exactly = 1) { dataSource.setAttributes(attrs, null) }
     }
 
     @Test
-    fun `removeAttribute should delegate to dataSource with key`() {
-        // Given
+    fun `removeAttribute with provider key should delegate to dataSource`() {
         every { dataSource.removeAttribute(any(), any()) } returns Unit
-
-        // When
-        repository.removeAttribute("key", "provider")
-
-        // Then
-        verify(exactly = 1) { dataSource.removeAttribute("key", "provider") }
+        repository.removeAttribute("k", "key")
+        verify(exactly = 1) { dataSource.removeAttribute("k", "key") }
     }
 
     @Test
-    fun `removeAttribute should delegate to dataSource without key`() {
-        // Given
+    fun `removeAttribute without provider key should delegate to dataSource with null`() {
         every { dataSource.removeAttribute(any(), any()) } returns Unit
-
-        // When
-        repository.removeAttribute("key")
-
-        // Then
-        verify(exactly = 1) { dataSource.removeAttribute("key", null) }
+        repository.removeAttribute("k")
+        verify(exactly = 1) { dataSource.removeAttribute("k", null) }
     }
 
     @Test
-    fun `removeAttributes should delegate to dataSource with key`() {
-        // Given
-        val keys = listOf("a", "b")
+    fun `removeAttributes with provider key should delegate to dataSource`() {
+        val keys = listOf("a")
         every { dataSource.removeAttributes(any(), any()) } returns Unit
-
-        // When
-        repository.removeAttributes(keys, "provider")
-
-        // Then
-        verify(exactly = 1) { dataSource.removeAttributes(keys, "provider") }
+        repository.removeAttributes(keys, "key")
+        verify(exactly = 1) { dataSource.removeAttributes(keys, "key") }
     }
 
     @Test
-    fun `removeAttributes should delegate to dataSource without key`() {
-        // Given
-        val keys = listOf("a", "b")
+    fun `removeAttributes without provider key should delegate to dataSource with null`() {
+        val keys = listOf("a")
         every { dataSource.removeAttributes(any(), any()) } returns Unit
-
-        // When
         repository.removeAttributes(keys)
-
-        // Then
         verify(exactly = 1) { dataSource.removeAttributes(keys, null) }
     }
 
     @Test
-    fun `startTrace should delegate to dataSource with key`() = runTest {
-        // Given
-        val key = "trace"
-        val props = mapOf("a" to 1)
-        val providerKey = "provider"
+    fun `startTrace with provider key should delegate to dataSource`() = runTest {
         coEvery { dataSource.startTrace(any(), any(), any()) } returns Unit
-
-        // When
-        repository.startTrace(key, props, providerKey)
-
-        // Then
-        coVerify(exactly = 1) { dataSource.startTrace(key, props, providerKey) }
+        repository.startTrace("t", null, "key")
+        coVerify(exactly = 1) { dataSource.startTrace("t", null, "key") }
     }
 
     @Test
-    fun `startTrace should delegate to dataSource without key`() = runTest {
-        // Given
-        val key = "trace"
-        val props = mapOf("a" to 1)
+    fun `startTrace without provider key should delegate to dataSource with null`() = runTest {
         coEvery { dataSource.startTrace(any(), any(), any()) } returns Unit
-
-        // When
-        repository.startTrace(key, props)
-
-        // Then
-        coVerify(exactly = 1) { dataSource.startTrace(key, props, null) }
+        repository.startTrace("t")
+        coVerify(exactly = 1) { dataSource.startTrace("t", null, null) }
     }
 
     @Test
-    fun `stopTrace should delegate to dataSource with key`() = runTest {
-        // Given
-        val key = "trace"
-        val props = mapOf("a" to 1)
-        val providerKey = "provider"
+    fun `stopTrace with provider key should delegate to dataSource`() = runTest {
         coEvery { dataSource.stopTrace(any(), any(), any()) } returns Unit
-
-        // When
-        repository.stopTrace(key, props, providerKey)
-
-        // Then
-        coVerify(exactly = 1) { dataSource.stopTrace(key, props, providerKey) }
+        repository.stopTrace("t", null, "key")
+        coVerify(exactly = 1) { dataSource.stopTrace("t", null, "key") }
     }
 
     @Test
-    fun `stopTrace should delegate to dataSource without key`() = runTest {
-        // Given
-        val key = "trace"
-        val props = mapOf("a" to 1)
+    fun `stopTrace without provider key should delegate to dataSource with null`() = runTest {
         coEvery { dataSource.stopTrace(any(), any(), any()) } returns Unit
-
-        // When
-        repository.stopTrace(key, props)
-
-        // Then
-        coVerify(exactly = 1) { dataSource.stopTrace(key, props, null) }
+        repository.stopTrace("t")
+        coVerify(exactly = 1) { dataSource.stopTrace("t", null, null) }
     }
 
     @Test
-    fun `cancelTrace should delegate to dataSource with key`() = runTest {
-        // Given
-        val key = "trace"
-        val providerKey = "provider"
+    fun `cancelTrace with provider key should delegate to dataSource`() = runTest {
         coEvery { dataSource.cancelTrace(any(), any()) } returns Unit
-
-        // When
-        repository.cancelTrace(key, providerKey)
-
-        // Then
-        coVerify(exactly = 1) { dataSource.cancelTrace(key, providerKey) }
+        repository.cancelTrace("t", "key")
+        coVerify(exactly = 1) { dataSource.cancelTrace("t", "key") }
     }
 
     @Test
-    fun `cancelTrace should delegate to dataSource without key`() = runTest {
-        // Given
-        val key = "trace"
+    fun `cancelTrace without provider key should delegate to dataSource with null`() = runTest {
         coEvery { dataSource.cancelTrace(any(), any()) } returns Unit
-
-        // When
-        repository.cancelTrace(key)
-
-        // Then
-        coVerify(exactly = 1) { dataSource.cancelTrace(key, null) }
+        repository.cancelTrace("t")
+        coVerify(exactly = 1) { dataSource.cancelTrace("t", null) }
     }
 }
