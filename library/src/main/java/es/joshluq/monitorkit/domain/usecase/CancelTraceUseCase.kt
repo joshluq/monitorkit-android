@@ -1,8 +1,6 @@
 package es.joshluq.monitorkit.domain.usecase
 
 import es.joshluq.monitorkit.domain.repository.MonitorRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 internal data class CancelTraceInput(
     val traceKey: String,
@@ -13,8 +11,8 @@ internal class CancelTraceUseCase(
     private val repository: MonitorRepository
 ) : UseCase<CancelTraceInput, NoneOutput> {
 
-    override fun invoke(input: CancelTraceInput): Flow<NoneOutput> = flow {
+    override suspend fun invoke(input: CancelTraceInput): Result<NoneOutput> = runCatching {
         repository.cancelTrace(input.traceKey, input.providerKey)
-        emit(NoneOutput)
+        NoneOutput
     }
 }

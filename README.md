@@ -7,13 +7,15 @@ Monitorkit is a powerful, lightweight Android library designed for real-time per
 ## 🚀 Key Features
 
 - **Resource Monitoring**: Track CPU and Memory usage.
-- **Custom Tracing**: Measure the duration of specific processes (e.g., image processing, login). Supports both internal calculation and native provider delegation.
-- **Network Insights**: Measure response times, HTTP status codes, and API call details.
-- **URL Sanitization**: Automatic masking of sensitive data (IDs, UUIDs) in URLs before reporting.
-- **Global Attributes**: Set persistent metadata (User ID, Environment, Experiment ID) across all providers.
-- **Dynamic Provider Management**: Add or remove data consumers (Firebase, Sentry, etc.) at runtime.
+- **Custom Tracing**: Measure process durations with internal calculation or native delegation.
+- **Network Insights**: Capture response times and status codes with automatic **URL Sanitization**.
+- **Screen Loading**: Measure time-to-interactive for Screens and Activities.
+- **Custom Events**: Track specific business events with metadata.
+- **Global Attributes**: Enrich data with persistent context (User ID, Environment).
+- **Targeted Monitoring**: Send metrics or set attributes to specific providers using `providerKey`.
+- **Dynamic Management**: Add/remove providers at runtime.
 - **Showcase Console**: Built-in real-time console in the showcase module to visualize captured data.
-- **Hilt Ready**: Full support for Dependency Injection.
+- **Framework Agnostic**: Manual Dependency Injection via Builder pattern. No third-party DI dependencies.
 
 ## 🏗 Architecture
 
@@ -29,7 +31,7 @@ graph TD
     subgraph "Domain Layer"
         UC[UseCases]
         R[Repository Interface]
-        MOD[Sealed Models]
+        MOD[PerformanceMetric / MonitorEvent]
     end
 
     subgraph "Data Layer"
@@ -56,67 +58,80 @@ graph TD
 ## 🛠 Usage Example
 
 ### 1. Initialize and Configure
-Inject `MonitorkitManager` and configure sanitization rules.
+Use the `MonitorkitManager.Builder` to configure and instantiate the manager.
 
 ```kotlin
-@HiltAndroidApp
 class ShowcaseApp : Application() {
-    @Inject lateinit var monitorkitManager: MonitorkitManager
+    companion object {
+        lateinit var monitorkitManager: MonitorkitManager
+    }
 
     override fun onCreate() {
         super.onCreate()
         
-        // Add Providers
-        monitorkitManager.addProvider(LogMonitorProvider())
+        monitorkitManager = MonitorkitManager.Builder()
+            .addProvider(LogMonitorProvider())
+            .configureUrlPatterns(listOf("api/v1/users/*/profile", "api/v1/orders/**"))
+            .setUseNativeTracing(false)
+            .build()
 
         // Set Global Attributes
         monitorkitManager.setAttribute("env", "production")
-        monitorkitManager.setAttributes(mapOf(
-            "user_tier" to "premium",
-            "app_version" to "1.0.0"
-        ))
+        monitorkitManager.setAttributes(mapOf("user_tier" to "premium"))
     }
 }
 ```
 
-### 2. Custom Tracing (Measure Duration)
-You can measure how long a process takes.
+### 2. Track Events and Metrics
+You can send data to all providers or target a specific one.
+
+```kotlin
+// Track a custom event
+monitorkitManager.trackEvent("login_success", mapOf("method" to "google"))
+
+// Track a screen load metric
+monitorkitManager.trackMetric(PerformanceMetric.ScreenLoad("DashboardFragment", 250L))
+
+// Targeted attribute (only for a specific provider)
+monitorkitManager.setAttribute("debug_log", "true", providerKey = "log_provider")
+```
+
+### 3. Custom Tracing (Measure Duration)
+Measure how long a process takes with `startTrace` and `stopTrace`.
 
 ```kotlin
 // Start the timer
-monitorkitManager.startTrace("image_compression", mapOf("format" to "png"))
+monitorkitManager.startTrace("image_upload", mapOf("size" to "2MB"))
 
-// ... do heavy work ...
+// ... work ...
 
-// Stop the timer and send the metric
-monitorkitManager.stopTrace("image_compression", mapOf("status" to "success"))
+// Stop and report the duration
+monitorkitManager.stopTrace("image_upload", mapOf("status" to "success"))
 ```
 
-*Note: You can enable `setUseNativeTracing(true)` to delegate start/stop calls directly to providers (e.g., for Firebase Performance Traces).*
-
-### 3. Track Network Metrics
-Sensitive URLs are automatically sanitized.
+### 4. Network Metrics & Sanitization
+Sensitive URLs are automatically masked based on your configuration.
 
 ```kotlin
 monitorkitManager.trackMetric(
-    PerformanceMetric.Network("https://api.example.com/orders/999/details", "GET", 200, 120L)
+    PerformanceMetric.Network("https://api.example.com/users/123/profile", "GET", 200, 150L)
 )
-// Output: https://api.example.com/orders/*/details
+// Resulting URL: https://api.example.com/users/*/profile
 ```
 
 ## 📂 Project Structure
 
 - `:monitorkit`: The core library module.
     - `sdk`: Public API (`MonitorkitManager`) and Sanitization logic.
-    - `domain`: Business logic, Repository interfaces, and Sealed Metric models.
+    - `domain`: Business logic, Repository interfaces, and Metric/Event models.
     - `data`: Repository implementation, DataSource, and Provider abstractions.
 - `:showcase`: A sample app demonstrating dynamic provider management, tracing, and a **real-time metric console**.
 
 ## 🧪 Quality Assurance
 
 - **KDocs**: Complete API documentation.
-- **Unit Testing**: 100% coverage including Tracing, Sanitization, and Attribute management.
-- **Efficiency**: Thread-safe provider management using `CopyOnWriteArrayList` and `ConcurrentHashMap`.
+- **Unit Testing**: 100% logic coverage with JUnit and MockK.
+- **Efficiency**: Thread-safe operations using `CopyOnWriteArrayList` and `ConcurrentHashMap`.
 
 ---
 
