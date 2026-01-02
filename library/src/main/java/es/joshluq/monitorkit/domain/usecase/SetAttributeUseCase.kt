@@ -1,8 +1,6 @@
 package es.joshluq.monitorkit.domain.usecase
 
 import es.joshluq.monitorkit.domain.repository.MonitorRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 internal data class SetAttributeInput(
     val key: String,
@@ -14,8 +12,8 @@ internal class SetAttributeUseCase(
     private val repository: MonitorRepository
 ) : UseCase<SetAttributeInput, NoneOutput> {
 
-    override fun invoke(input: SetAttributeInput): Flow<NoneOutput> = flow {
+    override suspend fun invoke(input: SetAttributeInput): Result<NoneOutput> = runCatching {
         repository.setAttribute(input.key, input.value, input.providerKey)
-        emit(NoneOutput)
+        NoneOutput
     }
 }

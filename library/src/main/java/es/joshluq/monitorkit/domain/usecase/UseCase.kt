@@ -1,7 +1,5 @@
 package es.joshluq.monitorkit.domain.usecase
 
-import kotlinx.coroutines.flow.Flow
-
 /**
  * Base interface for all use case inputs.
  */
@@ -14,12 +12,18 @@ internal interface UseCaseOutput
 
 /**
  * Represents a generic Use Case in Clean Architecture.
+ *
+ * @param I Input type that must implement [UseCaseInput].
+ * @param O Output type that must implement [UseCaseOutput].
  */
 internal interface UseCase<in I : UseCaseInput, out O : UseCaseOutput> {
     /**
      * Executes the business logic of the use case.
+     *
+     * @param input The parameters required for the operation.
+     * @return A [Result] containing the operation output or an exception.
      */
-    operator fun invoke(input: I): Flow<O>
+    suspend operator fun invoke(input: I): Result<O>
 }
 
 /**

@@ -1,8 +1,6 @@
 package es.joshluq.monitorkit.domain.usecase
 
 import es.joshluq.monitorkit.domain.repository.MonitorRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 internal data class RemoveProviderInput(
     val providerKey: String
@@ -12,8 +10,8 @@ internal class RemoveProviderUseCase(
     private val repository: MonitorRepository
 ) : UseCase<RemoveProviderInput, NoneOutput> {
 
-    override fun invoke(input: RemoveProviderInput): Flow<NoneOutput> = flow {
+    override suspend fun invoke(input: RemoveProviderInput): Result<NoneOutput> = runCatching {
         repository.removeProvider(input.providerKey)
-        emit(NoneOutput)
+        NoneOutput
     }
 }
