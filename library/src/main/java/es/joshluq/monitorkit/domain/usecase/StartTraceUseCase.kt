@@ -1,8 +1,6 @@
 package es.joshluq.monitorkit.domain.usecase
 
 import es.joshluq.monitorkit.domain.repository.MonitorRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 internal data class StartTraceInput(
     val traceKey: String,
@@ -14,8 +12,8 @@ internal class StartTraceUseCase(
     private val repository: MonitorRepository
 ) : UseCase<StartTraceInput, NoneOutput> {
 
-    override fun invoke(input: StartTraceInput): Flow<NoneOutput> = flow {
+    override suspend fun invoke(input: StartTraceInput): Result<NoneOutput> = runCatching {
         repository.startTrace(input.traceKey, input.properties, input.providerKey)
-        emit(NoneOutput)
+        NoneOutput
     }
 }

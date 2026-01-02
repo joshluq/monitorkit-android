@@ -17,7 +17,8 @@ The library follows **Clean Architecture** principles to ensure maintainability,
 ## Core Features
 - **MonitorkitManager**: A centralized manager that coordinates event tracking and metric collection. It is initialized using a declarative and fluent `Builder` API.
 - **Dynamic Provider Management**: Supports multiple `MonitorProvider` implementations simultaneously. Providers can be added during initialization via the Builder or at runtime using unique keys.
-- **Global Attributes**: Persistent key-value pairs that can be set at the provider level to enrich all subsequent events and metrics with context (e.g., user IDs, feature flags).
+- **Targeted Monitoring**: Most operations (`trackEvent`, `trackMetric`, `setAttribute`, etc.) accept an optional `providerKey`. If provided, the operation is routed only to that specific provider.
+- **Global Attributes**: Persistent key-value pairs that can be set at the provider or global level to enrich all subsequent events and metrics with context (e.g., user IDs, feature flags).
 - **Custom Tracing**: 
     - **Internal Mode**: The SDK calculates the duration and reports a `Trace` metric.
     - **Native Mode**: Delegates `start`/`stop` calls directly to providers (e.g., for Firebase Performance Trace objects).
@@ -28,7 +29,7 @@ The library follows **Clean Architecture** principles to ensure maintainability,
     - **Trace**: Custom process durations with start/stop times.
 - **URL Sanitization**: Built-in protection for sensitive data in URLs.
     - **Allowlist Patterns**: Matches specific paths using wildcards (`*` for segments, `**` for suffixes).
-    - **Generic Fallback**: Automatically masks UUIDs (`{uuid}`) and numeric IDs (`{id}`) if no pattern matches.
+    - **Generic Fallback**: Automatically masks UUIDs and numeric IDs with `*` if no pattern matches.
 - **Library Agnostic**: The core library has zero third-party dependencies. Integrations (Firebase, Sentry, etc.) are implemented in the consumer application.
 
 ## Standards
@@ -37,6 +38,5 @@ The library follows **Clean Architecture** principles to ensure maintainability,
     - **JUnit**
     - **MockK**
     - **Kotlin Coroutines Test**
-    - Provided via the `libs.plugins.pluginkit.android.testing` plugin.
 - **Performance**: High-frequency operations are optimized for low overhead and thread safety.
 - **Encapsulation**: Internal components (UseCases, Repositories, Sanitizers) are marked as `internal` to prevent direct access from consumer applications.
