@@ -98,6 +98,9 @@ class MainActivity : ComponentActivity() {
                                     "app_theme" to "dark"
                                 ))
                             },
+                            onSetTargetedAttribute = {
+                                monitorkitManager.setAttribute("debug_mode", "true", providerKey = "LOGCAT")
+                            },
                             onRemoveAttribute = {
                                 monitorkitManager.removeAttribute("user_tier")
                             },
@@ -139,6 +142,7 @@ fun MonitorControls(
     onTrackScreen: () -> Unit,
     onSimulateTrace: () -> Unit,
     onSetAttributes: () -> Unit,
+    onSetTargetedAttribute: () -> Unit,
     onRemoveAttribute: () -> Unit,
     onToggleProvider: () -> Unit,
     onToggleNativeTracing: () -> Unit
@@ -161,15 +165,19 @@ fun MonitorControls(
             Text(text = "Track Resource (CPU)")
         }
 
+        Button(onClick = onTrackScreen, modifier = Modifier.padding(4.dp)) {
+            Text(text = "Track Screen Load")
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Network Sanitization")
 
         Button(onClick = onTrackNetworkPattern, modifier = Modifier.padding(4.dp)) {
-            Text(text = "Pattern Match")
+            Text(text = "Pattern Match (api/users/*/profile)")
         }
 
         Button(onClick = onTrackNetworkFallback, modifier = Modifier.padding(4.dp)) {
-            Text(text = "Generic Fallback")
+            Text(text = "Generic Fallback (UUID/Numbers)")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -177,6 +185,10 @@ fun MonitorControls(
 
         Button(onClick = onSetAttributes, modifier = Modifier.padding(4.dp)) {
             Text(text = "Set Global Attributes")
+        }
+
+        Button(onClick = onSetTargetedAttribute, modifier = Modifier.padding(4.dp)) {
+            Text(text = "Set Attribute (Target: LOGCAT)")
         }
 
         Button(onClick = onRemoveAttribute, modifier = Modifier.padding(4.dp)) {

@@ -31,11 +31,11 @@ class MonitorkitManager internal constructor(
     private val setAttributeUseCase: SetAttributeUseCase,
     private val setAttributesUseCase: SetAttributesUseCase,
     private val removeAttributeUseCase: RemoveAttributeUseCase,
-    private val removeAttributesUseCase: RemoveAttributesUseCase
+    private val removeAttributesUseCase: RemoveAttributesUseCase,
+    private val urlSanitizer: UrlSanitizer
 ) {
 
-    internal val urlSanitizer: UrlSanitizer = UrlSanitizer()
-    internal var useNativeTracing: Boolean = false
+    private var useNativeTracing: Boolean = false
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val activeTraces = ConcurrentHashMap<String, TraceContext>()
@@ -44,6 +44,16 @@ class MonitorkitManager internal constructor(
         val startTime: Long,
         val properties: Map<String, Any>?
     )
+
+    /**
+     * Configures whether the SDK should delegate trace lifecycle (start/stop)
+     * directly to the providers (Native Mode) or calculate durations internally (Internal Mode).
+     *
+     * @param enabled True for Native Mode, false for Internal Mode.
+     */
+    fun setUseNativeTracing(enabled: Boolean) {
+        this.useNativeTracing = enabled
+    }
 
     /**
      * Adds a monitoring provider to the library at runtime.
@@ -250,6 +260,9 @@ class MonitorkitManager internal constructor(
         fun build(): MonitorkitManager {
             val dataSource = MonitorDataSourceImpl()
             val repository = MonitorRepositoryImpl(dataSource)
+            val sanitizer = UrlSanitizer().apply {
+                configurePatterns(urlPatterns)
+            }
 
             return MonitorkitManager(
                 addProviderUseCase = AddProviderUseCase(repository),
@@ -262,10 +275,10 @@ class MonitorkitManager internal constructor(
                 setAttributeUseCase = SetAttributeUseCase(repository),
                 setAttributesUseCase = SetAttributesUseCase(repository),
                 removeAttributeUseCase = RemoveAttributeUseCase(repository),
-                removeAttributesUseCase = RemoveAttributesUseCase(repository)
+                removeAttributesUseCase = RemoveAttributesUseCase(repository),
+                urlSanitizer = sanitizer
             ).also { manager ->
-                manager.useNativeTracing = useNativeTracing
-                manager.urlSanitizer.configurePatterns(urlPatterns)
+                manager.setUseNativeTracing(useNativeTracing)
                 providers.forEach(manager::addProvider)
             }
         }
