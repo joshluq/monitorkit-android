@@ -1,5 +1,8 @@
 package es.joshluq.monitorkit.domain.usecase
 
+import es.joshluq.foundationkit.usecase.NoneOutput
+import es.joshluq.foundationkit.usecase.UseCase
+import es.joshluq.foundationkit.usecase.UseCaseInput
 import es.joshluq.monitorkit.domain.repository.MonitorRepository
 
 internal data class RemoveAttributeInput(
