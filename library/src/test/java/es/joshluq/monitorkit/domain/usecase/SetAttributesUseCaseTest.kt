@@ -4,9 +4,7 @@ import es.joshluq.monitorkit.domain.repository.MonitorRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SetAttributesUseCaseTest {
@@ -22,10 +20,9 @@ class SetAttributesUseCaseTest {
         every { repository.setAttributes(any(), any()) } returns Unit
 
         // When
-        val result = useCase(input).toList()
+        useCase(input)
 
         // Then
         verify(exactly = 1) { repository.setAttributes(attributes, null) }
-        assertTrue(result.first() is NoneOutput)
     }
 }

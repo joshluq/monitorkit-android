@@ -4,9 +4,7 @@ import es.joshluq.monitorkit.domain.repository.MonitorRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StopTraceUseCaseTest {
@@ -23,10 +21,9 @@ class StopTraceUseCaseTest {
         coEvery { repository.stopTrace(any(), any(), any()) } returns Unit
 
         // When
-        val result = useCase(input).toList()
+        useCase(input)
 
         // Then
         coVerify(exactly = 1) { repository.stopTrace(key, props, null) }
-        assertTrue(result.first() is NoneOutput)
     }
 }
