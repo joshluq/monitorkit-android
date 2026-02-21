@@ -150,11 +150,12 @@ class MonitorkitManager internal constructor(
      * @param providerKey Optional. If provided, the metric will only be sent to that specific provider.
      */
     fun trackMetric(metric: PerformanceMetric, providerKey: String? = null) {
-        val processedMetric = if (metric is PerformanceMetric.Network) {
-            val sanitizedUrl = urlSanitizer.sanitize(metric.url)
-            metric.copy(url = sanitizedUrl)
-        } else {
-            metric
+        val processedMetric = when (metric) {
+            is PerformanceMetric.Network -> {
+                val sanitizedUrl = urlSanitizer.sanitize(metric.url)
+                metric.copy(url = sanitizedUrl)
+            }
+            else -> metric
         }
         scope.launch {
             trackMetricUseCase(TrackMetricInput(processedMetric, providerKey))

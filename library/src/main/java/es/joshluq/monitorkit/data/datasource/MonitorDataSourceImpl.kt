@@ -23,46 +23,56 @@ internal class MonitorDataSourceImpl : MonitorDataSource {
     }
 
     override suspend fun trackEvent(event: MonitorEvent, providerKey: String?) {
-        getProviders(providerKey).forEach { it.trackEvent(event) }
+        forEachProvider(providerKey) { it.trackEvent(event) }
     }
 
     override suspend fun trackMetric(metric: PerformanceMetric, providerKey: String?) {
-        getProviders(providerKey).forEach { it.trackMetric(metric) }
+        forEachProvider(providerKey) { it.trackMetric(metric) }
     }
 
     override fun setAttribute(key: String, value: String, providerKey: String?) {
-        getProviders(providerKey).forEach { it.setAttribute(key, value) }
+        forEachProvider(providerKey) { it.setAttribute(key, value) }
     }
 
     override fun setAttributes(attributes: Map<String, String>, providerKey: String?) {
-        getProviders(providerKey).forEach { it.setAttributes(attributes) }
+        forEachProvider(providerKey) { it.setAttributes(attributes) }
     }
 
     override fun removeAttribute(key: String, providerKey: String?) {
-        getProviders(providerKey).forEach { it.removeAttribute(key) }
+        forEachProvider(providerKey) { it.removeAttribute(key) }
     }
 
     override fun removeAttributes(keys: List<String>, providerKey: String?) {
-        getProviders(providerKey).forEach { it.removeAttributes(keys) }
+        forEachProvider(providerKey) { it.removeAttributes(keys) }
     }
 
     override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
-        getProviders(providerKey).forEach { it.startTrace(traceKey, properties) }
+        forEachProvider(providerKey) { it.startTrace(traceKey, properties) }
     }
 
     override suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
-        getProviders(providerKey).forEach { it.stopTrace(traceKey, properties) }
+        forEachProvider(providerKey) { it.stopTrace(traceKey, properties) }
     }
 
     override suspend fun cancelTrace(traceKey: String, providerKey: String?) {
-        getProviders(providerKey).forEach { it.cancelTrace(traceKey) }
+        forEachProvider(providerKey) { it.cancelTrace(traceKey) }
     }
 
-    private fun getProviders(key: String?): List<MonitorProvider> {
-        return if (key != null) {
-            providers.filter { it.key == key }
+    /**
+     * Iterates over providers matching the key, or all providers if key is null.
+     * Inline to avoid lambda allocation and allow direct iteration.
+     */
+    private inline fun forEachProvider(key: String?, action: (MonitorProvider) -> Unit) {
+        if (key != null) {
+            for (provider in providers) {
+                if (provider.key == key) {
+                    action(provider)
+                }
+            }
         } else {
-            providers
+            for (provider in providers) {
+                action(provider)
+            }
         }
     }
 }
