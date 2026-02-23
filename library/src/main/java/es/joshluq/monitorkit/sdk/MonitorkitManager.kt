@@ -1,5 +1,6 @@
 package es.joshluq.monitorkit.sdk
 
+import es.joshluq.foundationkit.coroutines.ScopeOwner
 import es.joshluq.monitorkit.data.datasource.MonitorDataSourceImpl
 import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.data.repository.MonitorRepositoryImpl
@@ -33,11 +34,11 @@ class MonitorkitManager internal constructor(
     private val removeAttributeUseCase: RemoveAttributeUseCase,
     private val removeAttributesUseCase: RemoveAttributesUseCase,
     private val urlSanitizer: UrlSanitizer
-) {
+)  : ScopeOwner {
 
     private var useNativeTracing: Boolean = false
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    override val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val activeTraces = ConcurrentHashMap<String, TraceContext>()
 
     private data class TraceContext(
