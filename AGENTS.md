@@ -10,7 +10,7 @@ The library follows **Clean Architecture** principles to ensure maintainability,
 
 ### Layers and Patterns
 - **Domain Layer**: Contains the core business logic using the **Repository** and **UseCase** patterns. It uses **Sealed Classes** (`PerformanceMetric`) to define extensible and type-safe performance data.
-- **Presentation Layer (`sdk` folder)**: Houses the `MonitorkitManager`, which uses a **Builder Pattern** for its initialization.
+- **Presentation Layer (`sdk` folder)**: Houses the `MonitorKitManager`, which uses a **Builder Pattern** for its initialization.
 - **Data Layer**: Defines the `MonitorProvider` interface and uses a `MonitorDataSource` with a `CopyOnWriteArrayList` for efficient, thread-safe provider management.
 - **Manual Dependency Injection**: The SDK is completely agnostic of third-party DI frameworks (like Hilt or Koin). It uses manual dependency injection via its internal `Builder` to instantiate its internal components.
 

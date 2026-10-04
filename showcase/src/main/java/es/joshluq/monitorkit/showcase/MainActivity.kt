@@ -39,7 +39,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
 import es.joshluq.monitorkit.domain.model.ResourceType
-import es.joshluq.monitorkit.sdk.MonitorkitManager
+import es.joshluq.monitorkit.sdk.MonitorKitManager
 import es.joshluq.monitorkit.showcase.ui.theme.ShowcaseTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +52,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var monitorkitManager: MonitorkitManager
+    lateinit var monitorkitManager: MonitorKitManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

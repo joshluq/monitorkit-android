@@ -24,12 +24,12 @@ Use this skill whenever you create, refactor, or review components, metrics, or 
      - `data/provider/`: `MonitorProvider` contract.
      - `data/repository/`: Implementations of repository interfaces (`MonitorRepositoryImpl`).
    - **Presentation / SDK Layer (`sdk/`)**:
-     - Public entry point: `MonitorkitManager` using the Fluent Builder Pattern.
+     - Public entry point: `MonitorKitManager` using the Fluent Builder Pattern.
      - Sub-components such as `UrlSanitizer`.
 
 3. **Strict Encapsulation (`internal`)**:
    - All UseCases, Repository implementations, DataSources, and Sanitizers MUST be marked `internal`.
-   - Only expose the public API surface: `MonitorkitManager`, `MonitorkitManager.Builder`, `MonitorProvider`, public models (`PerformanceMetric`, `ResourceType`), and explicit public contracts.
+   - Only expose the public API surface: `MonitorKitManager`, `MonitorkitManager.Builder`, `MonitorProvider`, public models (`PerformanceMetric`, `ResourceType`), and explicit public contracts.
 
 4. **KDocs Standards**:
    - Every public class, interface, method, and parameter MUST have meaningful KDocs explaining what it does, arguments (`@param`), and return values (`@return`).

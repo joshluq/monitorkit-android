@@ -8,7 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import es.joshluq.foundationkit.network.NetworkMonitor
 import es.joshluq.foundationkit.network.networkMonitor
-import es.joshluq.monitorkit.sdk.MonitorkitManager
+import es.joshluq.monitorkit.sdk.MonitorKitManager
 import javax.inject.Singleton
 
 @Module
@@ -31,8 +31,8 @@ object MonitorModule {
 
     @Provides
     @Singleton
-    fun provideMonitorkitManager(uiMonitorProvider: UiMonitorProvider): MonitorkitManager {
-        return MonitorkitManager.Builder()
+    fun provideMonitorkitManager(uiMonitorProvider: UiMonitorProvider): MonitorKitManager {
+        return MonitorKitManager.Builder()
             .addProvider(LogMonitorProvider())
             .addProvider(uiMonitorProvider)
             .configureUrlPatterns(

@@ -130,7 +130,7 @@ class FirebaseMonitorProvider : MonitorProvider {
 
 ---
 
-### 2. Initialize `MonitorkitManager`
+### 2. Initialize `MonitorKitManager`
 
 Initialize the centralized manager in your `Application.onCreate` using the fluent `Builder` API:
 
@@ -309,7 +309,7 @@ class MyTelemetryTest {
 ## 📂 Project Structure
 
 - `:monitorkit`: The core library module.
-  - `sdk`: Public API (`MonitorkitManager`), ANR Watchdog, and URL Sanitizer.
+  - `sdk`: Public API (`MonitorKitManager`), ANR Watchdog, and URL Sanitizer.
   - `domain`: UseCases, Repository interfaces, and Models (`PerformanceMetric`, `MonitorEvent`).
   - `data`: Thread-safe `MonitorDataSource`, Repository implementation, and `MonitorProvider` contract.
 - `:showcase`: A reference application showcasing dynamic provider switching, ANR generation, jank simulation, real-time Compose metric console, and `NetworkMonitor` integration.

@@ -23,7 +23,6 @@ import es.joshluq.monitorkit.domain.usecase.StartTraceInput
 import es.joshluq.monitorkit.domain.usecase.StartTraceUseCase
 import es.joshluq.monitorkit.domain.usecase.StopTraceInput
 import es.joshluq.monitorkit.domain.usecase.StopTraceUseCase
-import es.joshluq.monitorkit.domain.usecase.TrackEventInput
 import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
 import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
@@ -42,7 +41,7 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class MonitorkitManagerTest {
+class MonitorKitManagerTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
@@ -60,7 +59,7 @@ class MonitorkitManagerTest {
     private val urlSanitizer = mockk<UrlSanitizer>(relaxed = true)
 
     private fun createTestManager(useNativeTracing: Boolean = false) =
-        MonitorkitManager(
+        MonitorKitManager(
             addProviderUseCase = addProviderUseCase,
             removeProviderUseCase = removeProviderUseCase,
             trackEventUseCase = trackEventUseCase,
