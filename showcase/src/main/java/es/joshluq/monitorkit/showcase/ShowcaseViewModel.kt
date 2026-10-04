@@ -55,23 +55,37 @@ class ShowcaseViewModel @Inject constructor(
             initialValue = true,
         )
 
+    companion object {
+        private const val MAX_CONSOLE_MESSAGES = 150
+    }
+
     init {
         // Subscribe to the provider's flow to update the UI in real-time
         viewModelScope.launch {
             uiMonitorProvider.metricsFlow.collect { message ->
-                _consoleMessages.update { current -> current + message }
+                appendMessage(message)
             }
         }
 
         // Emit network status transitions into the console for real-time visibility
         viewModelScope.launch {
             networkMonitor.status.collect { status ->
-                _consoleMessages.update { current ->
-                    current + ConsoleMessage(
+                appendMessage(
+                    ConsoleMessage(
                         type = MessageType.NETWORK,
                         text = "NETWORK STATUS: ${status.name}",
-                    )
-                }
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun appendMessage(message: ConsoleMessage) {
+        _consoleMessages.update { current ->
+            if (current.size >= MAX_CONSOLE_MESSAGES) {
+                current.drop(current.size - MAX_CONSOLE_MESSAGES + 1) + message
+            } else {
+                current + message
             }
         }
     }

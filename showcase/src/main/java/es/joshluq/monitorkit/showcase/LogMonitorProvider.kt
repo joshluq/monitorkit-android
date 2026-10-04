@@ -25,6 +25,12 @@ class LogMonitorProvider(override val key: String = "LOGCAT") : MonitorProvider 
                 "Screen Metric: ${metric.screenName} | Load Time: ${metric.loadTime}ms"
             is PerformanceMetric.Trace ->
                 "Trace Metric (INTERNAL): ${metric.name} | Duration: ${metric.durationMs}ms | Properties: ${metric.properties}"
+            is PerformanceMetric.Jank ->
+                "Jank Metric: ${metric.screenName} | Duration: ${metric.durationMs}ms | Frozen: ${metric.isFrozen}"
+            is PerformanceMetric.Anr ->
+                "ANR Metric: Blocked for ~${metric.durationMs}ms | StackTrace: ${metric.stackTrace}"
+            is PerformanceMetric.AppStart ->
+                "AppStart Metric: ${metric.processType} launch | Duration: ${metric.durationMs}ms"
         }
         Log.d("Monitorkit-Showcase", logMessage)
     }

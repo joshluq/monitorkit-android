@@ -46,6 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -65,6 +66,50 @@ class MainActivity : ComponentActivity() {
                 var isProviderActive by remember { mutableStateOf(true) }
                 var isNativeTracing by remember { mutableStateOf(false) }
 
+                val onTrackEvent = remember(monitorkitManager) {
+                    { monitorkitManager.trackEvent("button_clicked", mapOf("screen" to "main")) }
+                }
+                val onTrackResource = remember(monitorkitManager) {
+                    { monitorkitManager.trackMetric(PerformanceMetric.Resource(ResourceType.CPU, 25.0, "%")) }
+                }
+                val onTrackNetworkPattern = remember(monitorkitManager) {
+                    { monitorkitManager.trackMetric(PerformanceMetric.Network("api/users/88552/profile", "GET", 200, 150L)) }
+                }
+                val onTrackNetworkFallback = remember(monitorkitManager) {
+                    { monitorkitManager.trackMetric(PerformanceMetric.Network("api/orders/999/details/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", "POST", 201, 320L)) }
+                }
+                val onTrackScreen = remember(monitorkitManager) {
+                    { monitorkitManager.trackMetric(PerformanceMetric.ScreenLoad("MainDashboard", 450L)) }
+                }
+                val onTrackJank = remember(monitorkitManager) {
+                    { monitorkitManager.trackJank("MainDashboard", 850L, isFrozen = true) }
+                }
+                val onTrackAppStart = remember(monitorkitManager) {
+                    { monitorkitManager.trackAppStart("COLD", 620L) }
+                }
+                val onSimulateTrace = remember(monitorkitManager) {
+                    {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            monitorkitManager.startTrace("image_process", mapOf("size" to "5MB"))
+                            delay(1500.milliseconds)
+                            monitorkitManager.stopTrace("image_process", mapOf("status" to "success"))
+                        }
+                        Unit
+                    }
+                }
+                val onSetAttributes = remember(monitorkitManager) {
+                    { monitorkitManager.setAttributes(mapOf("user_tier" to "premium", "app_theme" to "dark")) }
+                }
+                val onSetTargetedAttribute = remember(monitorkitManager) {
+                    { monitorkitManager.setAttribute("debug_mode", "true", providerKey = "LOGCAT") }
+                }
+                val onRemoveAttribute = remember(monitorkitManager) {
+                    { monitorkitManager.removeAttribute("user_tier") }
+                }
+                val onClearConsole = remember(showcaseViewModel) {
+                    { showcaseViewModel.clearConsole() }
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Column(modifier = Modifier.padding(innerPadding)) {
 
@@ -73,48 +118,17 @@ class MainActivity : ComponentActivity() {
                             networkStatus = networkStatus,
                             isProviderActive = isProviderActive,
                             isNativeTracing = isNativeTracing,
-                            onTrackEvent = {
-                                monitorkitManager.trackEvent("button_clicked", mapOf("screen" to "main"))
-                            },
-                            onTrackResource = {
-                                monitorkitManager.trackMetric(
-                                    PerformanceMetric.Resource(ResourceType.CPU, 25.0, "%")
-                                )
-                            },
-                            onTrackNetworkPattern = {
-                                monitorkitManager.trackMetric(
-                                    PerformanceMetric.Network("api/users/88552/profile", "GET", 200, 150L)
-                                )
-                            },
-                            onTrackNetworkFallback = {
-                                monitorkitManager.trackMetric(
-                                    PerformanceMetric.Network("api/orders/999/details/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11", "POST", 201, 320L)
-                                )
-                            },
-                            onTrackScreen = {
-                                monitorkitManager.trackMetric(
-                                    PerformanceMetric.ScreenLoad("MainDashboard", 450L)
-                                )
-                            },
-                            onSimulateTrace = {
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    monitorkitManager.startTrace("image_process", mapOf("size" to "5MB"))
-                                    delay(1500)
-                                    monitorkitManager.stopTrace("image_process", mapOf("status" to "success"))
-                                }
-                            },
-                            onSetAttributes = {
-                                monitorkitManager.setAttributes(mapOf(
-                                    "user_tier" to "premium",
-                                    "app_theme" to "dark"
-                                ))
-                            },
-                            onSetTargetedAttribute = {
-                                monitorkitManager.setAttribute("debug_mode", "true", providerKey = "LOGCAT")
-                            },
-                            onRemoveAttribute = {
-                                monitorkitManager.removeAttribute("user_tier")
-                            },
+                            onTrackEvent = onTrackEvent,
+                            onTrackResource = onTrackResource,
+                            onTrackNetworkPattern = onTrackNetworkPattern,
+                            onTrackNetworkFallback = onTrackNetworkFallback,
+                            onTrackScreen = onTrackScreen,
+                            onTrackJank = onTrackJank,
+                            onTrackAppStart = onTrackAppStart,
+                            onSimulateTrace = onSimulateTrace,
+                            onSetAttributes = onSetAttributes,
+                            onSetTargetedAttribute = onSetTargetedAttribute,
+                            onRemoveAttribute = onRemoveAttribute,
                             onToggleProvider = {
                                 if (isProviderActive) {
                                     monitorkitManager.removeProvider("LOGCAT")
@@ -131,7 +145,7 @@ class MainActivity : ComponentActivity() {
 
                         MetricConsoleView(
                             messages = consoleMessages,
-                            onClear = { showcaseViewModel.clearConsole() },
+                            onClear = onClearConsole,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -152,6 +166,8 @@ fun MonitorControls(
     onTrackNetworkPattern: () -> Unit,
     onTrackNetworkFallback: () -> Unit,
     onTrackScreen: () -> Unit,
+    onTrackJank: () -> Unit,
+    onTrackAppStart: () -> Unit,
     onSimulateTrace: () -> Unit,
     onSetAttributes: () -> Unit,
     onSetTargetedAttribute: () -> Unit,
@@ -182,6 +198,14 @@ fun MonitorControls(
 
         Button(onClick = onTrackScreen, modifier = Modifier.padding(4.dp)) {
             Text(text = "Track Screen Load")
+        }
+
+        Button(onClick = onTrackJank, modifier = Modifier.padding(4.dp)) {
+            Text(text = "Track Jank (Slow/Frozen Frame)")
+        }
+
+        Button(onClick = onTrackAppStart, modifier = Modifier.padding(4.dp)) {
+            Text(text = "Track App Start (Cold Launch)")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
