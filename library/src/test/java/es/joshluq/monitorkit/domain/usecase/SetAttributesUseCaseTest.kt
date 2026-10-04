@@ -8,21 +8,21 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class SetAttributesUseCaseTest {
-
     private val repository = mockk<MonitorRepository>()
     private val useCase = SetAttributesUseCase(repository)
 
     @Test
-    fun `invoke should call repository setAttributes and emit NoneOutput`() = runTest {
-        // Given
-        val attributes = mapOf("user_tier" to "premium", "app_version" to "1.0.0")
-        val input = SetAttributesInput(attributes)
-        every { repository.setAttributes(any(), any()) } returns Unit
+    fun `invoke should call repository setAttributes and emit NoneOutput`() =
+        runTest {
+            // Given
+            val attributes = mapOf("user_tier" to "premium", "app_version" to "1.0.0")
+            val input = SetAttributesInput(attributes)
+            every { repository.setAttributes(any(), any()) } returns Unit
 
-        // When
-        useCase(input)
+            // When
+            useCase(input)
 
-        // Then
-        verify(exactly = 1) { repository.setAttributes(attributes, null) }
-    }
+            // Then
+            verify(exactly = 1) { repository.setAttributes(attributes, null) }
+        }
 }

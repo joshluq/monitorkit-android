@@ -8,21 +8,21 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class RemoveAttributesUseCaseTest {
-
     private val repository = mockk<MonitorRepository>()
     private val useCase = RemoveAttributesUseCase(repository)
 
     @Test
-    fun `invoke should call repository removeAttributes and emit NoneOutput`() = runTest {
-        // Given
-        val keys = listOf("user_tier", "app_version")
-        val input = RemoveAttributesInput(keys)
-        every { repository.removeAttributes(any(), any()) } returns Unit
+    fun `invoke should call repository removeAttributes and emit NoneOutput`() =
+        runTest {
+            // Given
+            val keys = listOf("user_tier", "app_version")
+            val input = RemoveAttributesInput(keys)
+            every { repository.removeAttributes(any(), any()) } returns Unit
 
-        // When
-        useCase(input)
+            // When
+            useCase(input)
 
-        // Then
-        verify(exactly = 1) { repository.removeAttributes(keys, null) }
-    }
+            // Then
+            verify(exactly = 1) { repository.removeAttributes(keys, null) }
+        }
 }

@@ -6,7 +6,7 @@ package es.joshluq.monitorkit.domain.model
  * @property timestamp The time when the metric was captured.
  */
 sealed class PerformanceMetric(
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
 ) {
     /**
      * Metric for system resource usage.
@@ -17,7 +17,7 @@ sealed class PerformanceMetric(
     data class Resource(
         val type: ResourceType,
         val value: Double,
-        val unit: String
+        val unit: String,
     ) : PerformanceMetric()
 
     /**
@@ -31,7 +31,7 @@ sealed class PerformanceMetric(
         val url: String,
         val method: String,
         val statusCode: Int,
-        val responseTime: Long
+        val responseTime: Long,
     ) : PerformanceMetric()
 
     /**
@@ -41,7 +41,7 @@ sealed class PerformanceMetric(
      */
     data class ScreenLoad(
         val screenName: String,
-        val loadTime: Long
+        val loadTime: Long,
     ) : PerformanceMetric()
 
     /**
@@ -53,7 +53,7 @@ sealed class PerformanceMetric(
     data class Trace(
         val name: String,
         val durationMs: Long,
-        val properties: Map<String, Any>? = null
+        val properties: Map<String, Any>? = null,
     ) : PerformanceMetric()
 }
 
@@ -62,5 +62,5 @@ sealed class PerformanceMetric(
  */
 enum class ResourceType {
     CPU,
-    MEMORY
+    MEMORY,
 }

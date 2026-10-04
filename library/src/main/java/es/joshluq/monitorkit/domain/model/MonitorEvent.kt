@@ -10,5 +10,5 @@ package es.joshluq.monitorkit.domain.model
 data class MonitorEvent(
     val name: String,
     val properties: Map<String, Any> = emptyMap(),
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
 )

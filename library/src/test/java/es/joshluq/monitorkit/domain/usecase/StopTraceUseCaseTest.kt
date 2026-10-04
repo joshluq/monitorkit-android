@@ -8,22 +8,22 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class StopTraceUseCaseTest {
-
     private val repository = mockk<MonitorRepository>()
     private val useCase = StopTraceUseCase(repository)
 
     @Test
-    fun `invoke should call repository stopTrace and emit NoneOutput`() = runTest {
-        // Given
-        val key = "trace"
-        val props = mapOf("a" to 1)
-        val input = StopTraceInput(key, props)
-        coEvery { repository.stopTrace(any(), any(), any()) } returns Unit
+    fun `invoke should call repository stopTrace and emit NoneOutput`() =
+        runTest {
+            // Given
+            val key = "trace"
+            val props = mapOf("a" to 1)
+            val input = StopTraceInput(key, props)
+            coEvery { repository.stopTrace(any(), any(), any()) } returns Unit
 
-        // When
-        useCase(input)
+            // When
+            useCase(input)
 
-        // Then
-        coVerify(exactly = 1) { repository.stopTrace(key, props, null) }
-    }
+            // Then
+            coVerify(exactly = 1) { repository.stopTrace(key, props, null) }
+        }
 }

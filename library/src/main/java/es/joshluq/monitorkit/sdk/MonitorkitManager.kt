@@ -6,7 +6,28 @@ import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.data.repository.MonitorRepositoryImpl
 import es.joshluq.monitorkit.domain.model.MonitorEvent
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
-import es.joshluq.monitorkit.domain.usecase.*
+import es.joshluq.monitorkit.domain.usecase.AddProviderInput
+import es.joshluq.monitorkit.domain.usecase.AddProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.CancelTraceInput
+import es.joshluq.monitorkit.domain.usecase.CancelTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributeInput
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributeUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributesInput
+import es.joshluq.monitorkit.domain.usecase.RemoveAttributesUseCase
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderInput
+import es.joshluq.monitorkit.domain.usecase.RemoveProviderUseCase
+import es.joshluq.monitorkit.domain.usecase.SetAttributeInput
+import es.joshluq.monitorkit.domain.usecase.SetAttributeUseCase
+import es.joshluq.monitorkit.domain.usecase.SetAttributesInput
+import es.joshluq.monitorkit.domain.usecase.SetAttributesUseCase
+import es.joshluq.monitorkit.domain.usecase.StartTraceInput
+import es.joshluq.monitorkit.domain.usecase.StartTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.StopTraceInput
+import es.joshluq.monitorkit.domain.usecase.StopTraceUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackEventInput
+import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
+import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
+import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
 import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,9 +54,8 @@ class MonitorkitManager internal constructor(
     private val setAttributesUseCase: SetAttributesUseCase,
     private val removeAttributeUseCase: RemoveAttributeUseCase,
     private val removeAttributesUseCase: RemoveAttributesUseCase,
-    private val urlSanitizer: UrlSanitizer
-)  : ScopeOwner {
-
+    private val urlSanitizer: UrlSanitizer,
+) : ScopeOwner {
     private var useNativeTracing: Boolean = false
 
     override val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -43,7 +63,7 @@ class MonitorkitManager internal constructor(
 
     private data class TraceContext(
         val startTime: Long,
-        val properties: Map<String, Any>?
+        val properties: Map<String, Any>?,
     )
 
     /**
@@ -85,7 +105,11 @@ class MonitorkitManager internal constructor(
      * @param value The attribute value.
      * @param providerKey Optional. If provided, the attribute will only be set for that specific provider.
      */
-    fun setAttribute(key: String, value: String, providerKey: String? = null) {
+    fun setAttribute(
+        key: String,
+        value: String,
+        providerKey: String? = null,
+    ) {
         scope.launch {
             setAttributeUseCase(SetAttributeInput(key, value, providerKey))
         }
@@ -97,7 +121,10 @@ class MonitorkitManager internal constructor(
      * @param attributes A map of key-value pairs to set.
      * @param providerKey Optional. If provided, the attributes will only be set for that specific provider.
      */
-    fun setAttributes(attributes: Map<String, String>, providerKey: String? = null) {
+    fun setAttributes(
+        attributes: Map<String, String>,
+        providerKey: String? = null,
+    ) {
         scope.launch {
             setAttributesUseCase(SetAttributesInput(attributes, providerKey))
         }
@@ -109,7 +136,10 @@ class MonitorkitManager internal constructor(
      * @param key The attribute key to remove.
      * @param providerKey Optional. If provided, the attribute will only be removed from that specific provider.
      */
-    fun removeAttribute(key: String, providerKey: String? = null) {
+    fun removeAttribute(
+        key: String,
+        providerKey: String? = null,
+    ) {
         scope.launch {
             removeAttributeUseCase(RemoveAttributeInput(key, providerKey))
         }
@@ -121,7 +151,10 @@ class MonitorkitManager internal constructor(
      * @param keys The list of attribute keys to remove.
      * @param providerKey Optional. If provided, the attributes will only be removed from that specific provider.
      */
-    fun removeAttributes(keys: List<String>, providerKey: String? = null) {
+    fun removeAttributes(
+        keys: List<String>,
+        providerKey: String? = null,
+    ) {
         scope.launch {
             removeAttributesUseCase(RemoveAttributesInput(keys, providerKey))
         }
@@ -134,7 +167,11 @@ class MonitorkitManager internal constructor(
      * @param properties Optional metadata associated with the event.
      * @param providerKey Optional. If provided, the event will only be sent to that specific provider.
      */
-    fun trackEvent(name: String, properties: Map<String, Any> = emptyMap(), providerKey: String? = null) {
+    fun trackEvent(
+        name: String,
+        properties: Map<String, Any> = emptyMap(),
+        providerKey: String? = null,
+    ) {
         val event = MonitorEvent(name, properties)
         scope.launch {
             trackEventUseCase(TrackEventInput(event, providerKey))
@@ -150,14 +187,21 @@ class MonitorkitManager internal constructor(
      * @param metric The [PerformanceMetric] to record (Resource, Network, ScreenLoad, or Trace).
      * @param providerKey Optional. If provided, the metric will only be sent to that specific provider.
      */
-    fun trackMetric(metric: PerformanceMetric, providerKey: String? = null) {
-        val processedMetric = when (metric) {
-            is PerformanceMetric.Network -> {
-                val sanitizedUrl = urlSanitizer.sanitize(metric.url)
-                metric.copy(url = sanitizedUrl)
+    fun trackMetric(
+        metric: PerformanceMetric,
+        providerKey: String? = null,
+    ) {
+        val processedMetric =
+            when (metric) {
+                is PerformanceMetric.Network -> {
+                    val sanitizedUrl = urlSanitizer.sanitize(metric.url)
+                    metric.copy(url = sanitizedUrl)
+                }
+
+                else -> {
+                    metric
+                }
             }
-            else -> metric
-        }
         scope.launch {
             trackMetricUseCase(TrackMetricInput(processedMetric, providerKey))
         }
@@ -172,7 +216,10 @@ class MonitorkitManager internal constructor(
      * @param traceKey Unique identifier for the trace (e.g., "image_upload").
      * @param properties Optional initial metadata for the trace.
      */
-    fun startTrace(traceKey: String, properties: Map<String, Any>? = null) {
+    fun startTrace(
+        traceKey: String,
+        properties: Map<String, Any>? = null,
+    ) {
         if (useNativeTracing) {
             scope.launch {
                 startTraceUseCase(StartTraceInput(traceKey, properties))
@@ -191,7 +238,10 @@ class MonitorkitManager internal constructor(
      * @param traceKey Unique identifier for the trace.
      * @param properties Optional final metadata to merge with the initial properties.
      */
-    fun stopTrace(traceKey: String, properties: Map<String, Any>? = null) {
+    fun stopTrace(
+        traceKey: String,
+        properties: Map<String, Any>? = null,
+    ) {
         if (useNativeTracing) {
             scope.launch {
                 stopTraceUseCase(StopTraceInput(traceKey, properties))
@@ -199,7 +249,12 @@ class MonitorkitManager internal constructor(
         } else {
             val context = activeTraces.remove(traceKey) ?: return
             val duration = System.currentTimeMillis() - context.startTime
-            val mergedProperties = (context.properties.orEmpty() + properties.orEmpty()).takeIf { it.isNotEmpty() }
+            val mergedProperties =
+                when {
+                    context.properties.isNullOrEmpty() -> properties?.takeIf { it.isNotEmpty() }
+                    properties.isNullOrEmpty() -> context.properties
+                    else -> context.properties + properties
+                }
             trackMetric(PerformanceMetric.Trace(traceKey, duration, mergedProperties))
         }
     }
@@ -262,9 +317,10 @@ class MonitorkitManager internal constructor(
         fun build(): MonitorkitManager {
             val dataSource = MonitorDataSourceImpl()
             val repository = MonitorRepositoryImpl(dataSource)
-            val sanitizer = UrlSanitizer().apply {
-                configurePatterns(urlPatterns)
-            }
+            val sanitizer =
+                UrlSanitizer().apply {
+                    configurePatterns(urlPatterns)
+                }
 
             return MonitorkitManager(
                 addProviderUseCase = AddProviderUseCase(repository),
@@ -278,7 +334,7 @@ class MonitorkitManager internal constructor(
                 setAttributesUseCase = SetAttributesUseCase(repository),
                 removeAttributeUseCase = RemoveAttributeUseCase(repository),
                 removeAttributesUseCase = RemoveAttributesUseCase(repository),
-                urlSanitizer = sanitizer
+                urlSanitizer = sanitizer,
             ).also { manager ->
                 manager.setUseNativeTracing(useNativeTracing)
                 providers.forEach(manager::addProvider)

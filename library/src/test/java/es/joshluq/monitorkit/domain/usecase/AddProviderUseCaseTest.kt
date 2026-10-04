@@ -9,21 +9,21 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class AddProviderUseCaseTest {
-
     private val repository = mockk<MonitorRepository>()
     private val useCase = AddProviderUseCase(repository)
 
     @Test
-    fun `invoke should call repository addProvider and emit NoneOutput`() = runTest {
-        // Given
-        val provider = mockk<MonitorProvider>()
-        val input = AddProviderInput(provider)
-        every { repository.addProvider(any()) } returns Unit
+    fun `invoke should call repository addProvider and emit NoneOutput`() =
+        runTest {
+            // Given
+            val provider = mockk<MonitorProvider>()
+            val input = AddProviderInput(provider)
+            every { repository.addProvider(any()) } returns Unit
 
-        // When
-        useCase(input)
+            // When
+            useCase(input)
 
-        // Then
-        verify(exactly = 1) { repository.addProvider(provider) }
-    }
+            // Then
+            verify(exactly = 1) { repository.addProvider(provider) }
+        }
 }
