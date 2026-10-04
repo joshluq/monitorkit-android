@@ -16,6 +16,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,7 +43,7 @@ fun MetricConsoleView(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
-    val timeFormatter = SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault())
+    val timeFormatter = remember { SimpleDateFormat("HH:mm:ss.SSS", Locale.getDefault()) }
 
     // Autoscroll logic: whenever the messages list changes, scroll to the last item
     LaunchedEffect(messages.size) {
@@ -78,7 +79,10 @@ fun MetricConsoleView(
 
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(state = listState) {
-                items(messages) { message ->
+                items(
+                    items = messages,
+                    key = { message -> "${message.timestamp}_${message.text.hashCode()}" },
+                ) { message ->
                     ConsoleRow(message, timeFormatter)
                 }
             }

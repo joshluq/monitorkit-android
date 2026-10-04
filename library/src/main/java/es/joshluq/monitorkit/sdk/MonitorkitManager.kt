@@ -29,6 +29,7 @@ import es.joshluq.monitorkit.domain.usecase.TrackEventUseCase
 import es.joshluq.monitorkit.domain.usecase.TrackMetricInput
 import es.joshluq.monitorkit.domain.usecase.TrackMetricUseCase
 import es.joshluq.monitorkit.sdk.sanitizer.UrlSanitizer
+import es.joshluq.monitorkit.sdk.watchdog.AnrWatchdog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -57,6 +58,7 @@ class MonitorkitManager internal constructor(
     private val urlSanitizer: UrlSanitizer,
 ) : ScopeOwner {
     private var useNativeTracing: Boolean = false
+    internal var anrWatchdog: AnrWatchdog? = null
 
     override val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val activeTraces = ConcurrentHashMap<String, TraceContext>()
@@ -208,6 +210,46 @@ class MonitorkitManager internal constructor(
     }
 
     /**
+     * Tracks a UI rendering jank (slow or frozen frame).
+     *
+     * @param screenName The screen or activity where the jank occurred.
+     * @param durationMs The frame rendering duration in milliseconds.
+     * @param isFrozen Whether the frame exceeded the frozen threshold (default: true if durationMs >= 700ms).
+     * @param providerKey Optional. If provided, the metric will only be sent to that specific provider.
+     */
+    fun trackJank(
+        screenName: String,
+        durationMs: Long,
+        isFrozen: Boolean = durationMs >= 700L,
+        providerKey: String? = null,
+    ) {
+        trackMetric(PerformanceMetric.Jank(screenName, durationMs, isFrozen), providerKey)
+    }
+
+    /**
+     * Tracks application start duration (Cold, Warm, or Hot launch).
+     *
+     * @param processType Launch type, e.g. "COLD", "WARM", or "HOT".
+     * @param durationMs Time in milliseconds taken to launch and display.
+     * @param providerKey Optional. If provided, the metric will only be sent to that specific provider.
+     */
+    fun trackAppStart(
+        processType: String,
+        durationMs: Long,
+        providerKey: String? = null,
+    ) {
+        trackMetric(PerformanceMetric.AppStart(processType, durationMs), providerKey)
+    }
+
+    /**
+     * Stops the active ANR Watchdog if running.
+     */
+    fun stopAnrWatchdog() {
+        anrWatchdog?.stopWatchdog()
+        anrWatchdog = null
+    }
+
+    /**
      * Starts a custom trace timer.
      *
      * If `useNativeTracing` is true, the start signal is delegated to all providers.
@@ -282,6 +324,7 @@ class MonitorkitManager internal constructor(
         private val providers = mutableListOf<MonitorProvider>()
         private var useNativeTracing = false
         private val urlPatterns = mutableListOf<String>()
+        private var anrTimeoutMs: Long? = null
 
         /**
          * Adds an initial monitoring provider (e.g., Firebase, Sentry, Logcat).
@@ -308,6 +351,25 @@ class MonitorkitManager internal constructor(
          * @param patterns List of path patterns to allowlist.
          */
         fun configureUrlPatterns(patterns: List<String>) = apply { urlPatterns.addAll(patterns) }
+
+        /**
+         * Enables the ANR (Application Not Responding) Watchdog.
+         * When the main thread is unresponsive for longer than [timeoutMs], an ANR metric is recorded.
+         *
+         * @param timeoutMs Threshold in milliseconds (default: 5000ms).
+         */
+        fun enableAnrWatchdog(timeoutMs: Long = AnrWatchdog.DEFAULT_TIMEOUT_MS) =
+            apply {
+                this.anrTimeoutMs = timeoutMs
+            }
+
+        /**
+         * Disables the ANR Watchdog.
+         */
+        fun disableAnrWatchdog() =
+            apply {
+                this.anrTimeoutMs = null
+            }
 
         /**
          * Builds and returns the [MonitorkitManager] instance with the specified configuration.
@@ -338,6 +400,12 @@ class MonitorkitManager internal constructor(
             ).also { manager ->
                 manager.setUseNativeTracing(useNativeTracing)
                 providers.forEach(manager::addProvider)
+                anrTimeoutMs?.let { timeout ->
+                    manager.anrWatchdog =
+                        AnrWatchdog(timeoutMs = timeout) { durationMs, stackTrace ->
+                            manager.trackMetric(PerformanceMetric.Anr(durationMs, stackTrace))
+                        }.apply { start() }
+                }
             }
         }
     }

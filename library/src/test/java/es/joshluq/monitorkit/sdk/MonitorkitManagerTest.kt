@@ -270,4 +270,39 @@ class MonitorkitManagerTest {
 
             coVerify(timeout = 2000) { cancelTraceUseCase(CancelTraceInput(traceKey)) }
         }
+
+    @Test
+    fun `trackJank should delegate to trackMetricUseCase with Jank metric`() =
+        runTest {
+            val manager = createTestManager()
+            manager.trackJank("HomeActivity", 850L, isFrozen = true)
+
+            val slot = slot<TrackMetricInput>()
+            coVerify(timeout = 2000) { trackMetricUseCase(capture(slot)) }
+
+            val metric = slot.captured.metric as PerformanceMetric.Jank
+            assertEquals("HomeActivity", metric.screenName)
+            assertEquals(850L, metric.durationMs)
+            assertTrue(metric.isFrozen)
+        }
+
+    @Test
+    fun `trackAppStart should delegate to trackMetricUseCase with AppStart metric`() =
+        runTest {
+            val manager = createTestManager()
+            manager.trackAppStart("COLD", 650L)
+
+            val slot = slot<TrackMetricInput>()
+            coVerify(timeout = 2000) { trackMetricUseCase(capture(slot)) }
+
+            val metric = slot.captured.metric as PerformanceMetric.AppStart
+            assertEquals("COLD", metric.processType)
+            assertEquals(650L, metric.durationMs)
+        }
+
+    @Test
+    fun `stopAnrWatchdog should stop active watchdog without exception`() {
+        val manager = createTestManager()
+        manager.stopAnrWatchdog()
+    }
 }

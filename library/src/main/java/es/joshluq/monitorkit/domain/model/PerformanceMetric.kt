@@ -55,6 +55,41 @@ sealed class PerformanceMetric(
         val durationMs: Long,
         val properties: Map<String, Any>? = null,
     ) : PerformanceMetric()
+
+    /**
+     * Metric for UI frame rendering latency and slow or frozen frames.
+     *
+     * @property screenName The screen or activity where jank was detected.
+     * @property durationMs The duration taken to render the frame in milliseconds.
+     * @property isFrozen Whether the frame exceeded the frozen threshold (typically > 700ms).
+     */
+    data class Jank(
+        val screenName: String,
+        val durationMs: Long,
+        val isFrozen: Boolean = false,
+    ) : PerformanceMetric()
+
+    /**
+     * Metric captured when the main thread is blocked (Application Not Responding).
+     *
+     * @property durationMs The approximate duration in milliseconds the main thread was unresponsive.
+     * @property stackTrace The captured stack trace of the main thread at the moment of the blockage.
+     */
+    data class Anr(
+        val durationMs: Long,
+        val stackTrace: String,
+    ) : PerformanceMetric()
+
+    /**
+     * Metric for application launch duration.
+     *
+     * @property processType The type of launch (e.g. "COLD", "WARM", "HOT").
+     * @property durationMs Time taken in milliseconds from start to interactive display.
+     */
+    data class AppStart(
+        val processType: String,
+        val durationMs: Long,
+    ) : PerformanceMetric()
 }
 
 /**

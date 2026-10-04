@@ -35,27 +35,45 @@ class UiMonitorProvider @Inject constructor() : MonitorProvider {
     }
 
     override suspend fun trackMetric(metric: PerformanceMetric) {
-        val message = when (metric) {
-            is PerformanceMetric.Network -> {
-                "NETWORK: [${metric.statusCode}] ${metric.method} ${metric.url} (${metric.responseTime}ms)"
+        val message =
+            when (metric) {
+                is PerformanceMetric.Network -> {
+                    "NETWORK: [${metric.statusCode}] ${metric.method} ${metric.url} (${metric.responseTime}ms)"
+                }
+
+                is PerformanceMetric.Resource -> {
+                    "RESOURCE: ${metric.type} = ${metric.value}${metric.unit}"
+                }
+
+                is PerformanceMetric.ScreenLoad -> {
+                    "SCREEN: ${metric.screenName} loaded in ${metric.loadTime}ms"
+                }
+
+                is PerformanceMetric.Trace -> {
+                    "TRACE: ${metric.name} duration: ${metric.durationMs}ms | Props: ${metric.properties}"
+                }
+
+                is PerformanceMetric.Jank -> {
+                    "JANK: [${metric.screenName}] ${metric.durationMs}ms (Frozen: ${metric.isFrozen})"
+                }
+
+                is PerformanceMetric.Anr -> {
+                    "ANR DETECTED: blocked for ~${metric.durationMs}ms"
+                }
+
+                is PerformanceMetric.AppStart -> {
+                    "APP START: ${metric.processType} launch took ${metric.durationMs}ms"
+                }
             }
-            is PerformanceMetric.Resource -> {
-                "RESOURCE: ${metric.type} = ${metric.value}${metric.unit}"
+
+        val type =
+            when (metric) {
+                is PerformanceMetric.Network -> MessageType.NETWORK
+                is PerformanceMetric.Resource -> MessageType.RESOURCE
+                is PerformanceMetric.Trace -> MessageType.TRACE
+                is PerformanceMetric.Anr -> MessageType.EVENT
+                else -> MessageType.SCREEN
             }
-            is PerformanceMetric.ScreenLoad -> {
-                "SCREEN: ${metric.screenName} loaded in ${metric.loadTime}ms"
-            }
-            is PerformanceMetric.Trace -> {
-                "TRACE: ${metric.name} duration: ${metric.durationMs}ms | Props: ${metric.properties}"
-            }
-        }
-        
-        val type = when (metric) {
-            is PerformanceMetric.Network -> MessageType.NETWORK
-            is PerformanceMetric.Resource -> MessageType.RESOURCE
-            is PerformanceMetric.Trace -> MessageType.TRACE
-            else -> MessageType.SCREEN
-        }
 
         _metricsFlow.emit(ConsoleMessage(type, message))
     }
