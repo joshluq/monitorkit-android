@@ -37,13 +37,13 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Main entry point for the Monitorkit library.
+ * Main entry point for the MonitorKit library.
  * This manager coordinates monitoring operations and routes them to the registered providers.
  *
  * It uses the Builder pattern for declarative and fluent configuration via Manual Dependency Injection.
  * All operations are thread-safe and executed asynchronously in the [Dispatchers.IO] scope.
  */
-class MonitorkitManager internal constructor(
+class MonitorKitManager internal constructor(
     private val addProviderUseCase: AddProviderUseCase,
     private val removeProviderUseCase: RemoveProviderUseCase,
     private val trackEventUseCase: TrackEventUseCase,
@@ -317,7 +317,7 @@ class MonitorkitManager internal constructor(
     }
 
     /**
-     * Builder class for [MonitorkitManager].
+     * Builder class for [MonitorKitManager].
      * Instantiates all internal dependencies manually to remain framework-agnostic.
      */
     class Builder {
@@ -372,11 +372,11 @@ class MonitorkitManager internal constructor(
             }
 
         /**
-         * Builds and returns the [MonitorkitManager] instance with the specified configuration.
+         * Builds and returns the [MonitorKitManager] instance with the specified configuration.
          *
-         * @return A fully initialized [MonitorkitManager].
+         * @return A fully initialized [MonitorKitManager].
          */
-        fun build(): MonitorkitManager {
+        fun build(): MonitorKitManager {
             val dataSource = MonitorDataSourceImpl()
             val repository = MonitorRepositoryImpl(dataSource)
             val sanitizer =
@@ -384,7 +384,7 @@ class MonitorkitManager internal constructor(
                     configurePatterns(urlPatterns)
                 }
 
-            return MonitorkitManager(
+            return MonitorKitManager(
                 addProviderUseCase = AddProviderUseCase(repository),
                 removeProviderUseCase = RemoveProviderUseCase(repository),
                 trackEventUseCase = TrackEventUseCase(repository),
