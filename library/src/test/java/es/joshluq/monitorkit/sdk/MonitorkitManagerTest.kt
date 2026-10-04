@@ -1,5 +1,6 @@
 package es.joshluq.monitorkit.sdk
 
+import es.joshluq.foundationkit.testing.coroutines.MainDispatcherRule
 import es.joshluq.foundationkit.usecase.NoneOutput
 import es.joshluq.monitorkit.data.provider.MonitorProvider
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
@@ -37,10 +38,14 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MonitorkitManagerTest {
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
     private val addProviderUseCase = mockk<AddProviderUseCase>(relaxed = true)
     private val removeProviderUseCase = mockk<RemoveProviderUseCase>(relaxed = true)
     private val trackEventUseCase = mockk<TrackEventUseCase>(relaxed = true)
