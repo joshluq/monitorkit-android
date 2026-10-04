@@ -20,4 +20,6 @@ configure<ApplicationExtension> {
 
 dependencies {
     implementation(project(":monitorkit"))
+    implementation("es.joshluq.kit:foundationkit:2.0.0")
+    testImplementation("es.joshluq.kit:foundationkit-testing:2.0.0")
 }

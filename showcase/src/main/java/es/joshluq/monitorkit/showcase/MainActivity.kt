@@ -4,13 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,7 +31,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import es.joshluq.foundationkit.network.NetworkStatus
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.AndroidEntryPoint
 import es.joshluq.monitorkit.domain.model.PerformanceMetric
@@ -51,7 +60,8 @@ class MainActivity : ComponentActivity() {
             ShowcaseTheme {
                 val showcaseViewModel: ShowcaseViewModel = viewModel()
                 val consoleMessages by showcaseViewModel.consoleMessages.collectAsState()
-                
+                val networkStatus by showcaseViewModel.networkStatus.collectAsState()
+
                 var isProviderActive by remember { mutableStateOf(true) }
                 var isNativeTracing by remember { mutableStateOf(false) }
 
@@ -60,6 +70,7 @@ class MainActivity : ComponentActivity() {
 
                         MonitorControls(
                             modifier = Modifier.weight(2f),
+                            networkStatus = networkStatus,
                             isProviderActive = isProviderActive,
                             isNativeTracing = isNativeTracing,
                             onTrackEvent = {
@@ -133,6 +144,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MonitorControls(
     modifier: Modifier = Modifier,
+    networkStatus: NetworkStatus,
     isProviderActive: Boolean,
     isNativeTracing: Boolean,
     onTrackEvent: () -> Unit,
@@ -156,6 +168,9 @@ fun MonitorControls(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "Monitorkit Showcase Controls")
+        Spacer(modifier = Modifier.height(4.dp))
+        NetworkStatusBadge(networkStatus = networkStatus)
+        Spacer(modifier = Modifier.height(8.dp))
         
         Button(onClick = onTrackEvent, modifier = Modifier.padding(4.dp)) {
             Text(text = "Track Custom Event")
@@ -216,5 +231,34 @@ fun MonitorControls(
         ) {
             Text(text = if (isProviderActive) "Remove Log Provider" else "Add Log Provider")
         }
+    }
+}
+
+@Composable
+fun NetworkStatusBadge(networkStatus: NetworkStatus) {
+    val (statusColor, statusText) = when (networkStatus) {
+        NetworkStatus.Available -> Color(0xFF4CAF50) to "Connected (Available)"
+        NetworkStatus.Losing -> Color(0xFFFF9800) to "Degrading (Losing)"
+        NetworkStatus.Lost -> Color(0xFFF44336) to "Lost (Offline)"
+        NetworkStatus.Unavailable -> Color(0xFF9E9E9E) to "Unavailable (Offline)"
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .background(statusColor, shape = CircleShape)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = "Network: $statusText",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = statusColor
+        )
     }
 }
