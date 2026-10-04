@@ -22,45 +22,75 @@ internal interface MonitorDataSource {
     /**
      * Dispatches a custom event.
      */
-    suspend fun trackEvent(event: MonitorEvent, providerKey: String? = null)
+    suspend fun trackEvent(
+        event: MonitorEvent,
+        providerKey: String? = null,
+    )
 
     /**
      * Dispatches a performance metric.
      */
-    suspend fun trackMetric(metric: PerformanceMetric, providerKey: String? = null)
+    suspend fun trackMetric(
+        metric: PerformanceMetric,
+        providerKey: String? = null,
+    )
 
     /**
      * Sets a global attribute for providers.
      */
-    fun setAttribute(key: String, value: String, providerKey: String? = null)
+    fun setAttribute(
+        key: String,
+        value: String,
+        providerKey: String? = null,
+    )
 
     /**
      * Sets multiple global attributes for providers.
      */
-    fun setAttributes(attributes: Map<String, String>, providerKey: String? = null)
+    fun setAttributes(
+        attributes: Map<String, String>,
+        providerKey: String? = null,
+    )
 
     /**
      * Removes a global attribute from providers.
      */
-    fun removeAttribute(key: String, providerKey: String? = null)
+    fun removeAttribute(
+        key: String,
+        providerKey: String? = null,
+    )
 
     /**
      * Removes multiple global attributes from providers.
      */
-    fun removeAttributes(keys: List<String>, providerKey: String? = null)
+    fun removeAttributes(
+        keys: List<String>,
+        providerKey: String? = null,
+    )
 
     /**
      * Dispatches a start trace operation to providers.
      */
-    suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?)
+    suspend fun startTrace(
+        traceKey: String,
+        properties: Map<String, Any>?,
+        providerKey: String?,
+    )
 
     /**
      * Dispatches a stop trace operation to providers.
      */
-    suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?)
+    suspend fun stopTrace(
+        traceKey: String,
+        properties: Map<String, Any>?,
+        providerKey: String?,
+    )
 
     /**
      * Dispatches a cancel trace operation to providers.
      */
-    suspend fun cancelTrace(traceKey: String, providerKey: String?)
+    suspend fun cancelTrace(
+        traceKey: String,
+        providerKey: String?,
+    )
 }

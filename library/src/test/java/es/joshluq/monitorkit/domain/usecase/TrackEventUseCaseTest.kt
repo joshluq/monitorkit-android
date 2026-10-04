@@ -9,21 +9,21 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class TrackEventUseCaseTest {
-
     private val repository = mockk<MonitorRepository>()
     private val useCase = TrackEventUseCase(repository)
 
     @Test
-    fun `invoke should call repository trackEvent and emit NoneOutput`() = runTest {
-        // Given
-        val event = MonitorEvent("test")
-        val input = TrackEventInput(event)
-        coEvery { repository.trackEvent(any(), any()) } returns Unit
+    fun `invoke should call repository trackEvent and emit NoneOutput`() =
+        runTest {
+            // Given
+            val event = MonitorEvent("test")
+            val input = TrackEventInput(event)
+            coEvery { repository.trackEvent(any(), any()) } returns Unit
 
-        // When
-        useCase(input)
+            // When
+            useCase(input)
 
-        // Then
-        coVerify(exactly = 1) { repository.trackEvent(event, null) }
-    }
+            // Then
+            coVerify(exactly = 1) { repository.trackEvent(event, null) }
+        }
 }

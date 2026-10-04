@@ -11,9 +11,8 @@ import es.joshluq.monitorkit.domain.repository.MonitorRepository
  * Acts as a bridge between the domain layer and the data sources.
  */
 internal class MonitorRepositoryImpl(
-    private val dataSource: MonitorDataSource
+    private val dataSource: MonitorDataSource,
 ) : MonitorRepository {
-
     override fun addProvider(provider: MonitorProvider) {
         dataSource.addProvider(provider)
     }
@@ -22,39 +21,69 @@ internal class MonitorRepositoryImpl(
         dataSource.removeProvider(providerKey)
     }
 
-    override suspend fun trackEvent(event: MonitorEvent, providerKey: String?) {
+    override suspend fun trackEvent(
+        event: MonitorEvent,
+        providerKey: String?,
+    ) {
         dataSource.trackEvent(event, providerKey)
     }
 
-    override suspend fun trackMetric(metric: PerformanceMetric, providerKey: String?) {
+    override suspend fun trackMetric(
+        metric: PerformanceMetric,
+        providerKey: String?,
+    ) {
         dataSource.trackMetric(metric, providerKey)
     }
 
-    override fun setAttribute(key: String, value: String, providerKey: String?) {
+    override fun setAttribute(
+        key: String,
+        value: String,
+        providerKey: String?,
+    ) {
         dataSource.setAttribute(key, value, providerKey)
     }
 
-    override fun setAttributes(attributes: Map<String, String>, providerKey: String?) {
+    override fun setAttributes(
+        attributes: Map<String, String>,
+        providerKey: String?,
+    ) {
         dataSource.setAttributes(attributes, providerKey)
     }
 
-    override fun removeAttribute(key: String, providerKey: String?) {
+    override fun removeAttribute(
+        key: String,
+        providerKey: String?,
+    ) {
         dataSource.removeAttribute(key, providerKey)
     }
 
-    override fun removeAttributes(keys: List<String>, providerKey: String?) {
+    override fun removeAttributes(
+        keys: List<String>,
+        providerKey: String?,
+    ) {
         dataSource.removeAttributes(keys, providerKey)
     }
 
-    override suspend fun startTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
+    override suspend fun startTrace(
+        traceKey: String,
+        properties: Map<String, Any>?,
+        providerKey: String?,
+    ) {
         dataSource.startTrace(traceKey, properties, providerKey)
     }
 
-    override suspend fun stopTrace(traceKey: String, properties: Map<String, Any>?, providerKey: String?) {
+    override suspend fun stopTrace(
+        traceKey: String,
+        properties: Map<String, Any>?,
+        providerKey: String?,
+    ) {
         dataSource.stopTrace(traceKey, properties, providerKey)
     }
 
-    override suspend fun cancelTrace(traceKey: String, providerKey: String?) {
+    override suspend fun cancelTrace(
+        traceKey: String,
+        providerKey: String?,
+    ) {
         dataSource.cancelTrace(traceKey, providerKey)
     }
 }

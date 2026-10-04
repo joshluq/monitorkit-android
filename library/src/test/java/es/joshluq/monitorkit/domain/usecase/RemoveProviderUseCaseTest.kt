@@ -8,21 +8,21 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class RemoveProviderUseCaseTest {
-
     private val repository = mockk<MonitorRepository>()
     private val useCase = RemoveProviderUseCase(repository)
 
     @Test
-    fun `invoke should call repository removeProvider and emit NoneOutput`() = runTest {
-        // Given
-        val providerKey = "test_key"
-        val input = RemoveProviderInput(providerKey)
-        every { repository.removeProvider(any()) } returns Unit
+    fun `invoke should call repository removeProvider and emit NoneOutput`() =
+        runTest {
+            // Given
+            val providerKey = "test_key"
+            val input = RemoveProviderInput(providerKey)
+            every { repository.removeProvider(any()) } returns Unit
 
-        // When
-        useCase(input)
+            // When
+            useCase(input)
 
-        // Then
-        verify(exactly = 1) { repository.removeProvider(providerKey) }
-    }
+            // Then
+            verify(exactly = 1) { repository.removeProvider(providerKey) }
+        }
 }

@@ -11,8 +11,14 @@ import java.util.concurrent.ConcurrentHashMap
  * 2. **Generic Fallback**: Uses Regex to replace UUIDs and numeric IDs.
  */
 internal class UrlSanitizer {
+    private data class PatternEntry(
+        val originalPattern: String,
+        val regex: Regex,
+    )
 
-    private val compiledPatterns = ConcurrentHashMap<String, Regex>()
+    @Volatile
+    private var compiledPatterns: List<PatternEntry> = emptyList()
+
     private val uuidRegex = Regex("(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
     private val numberRegex = Regex("(?<=/|^)\\d+(?=/|$)")
 
@@ -26,18 +32,19 @@ internal class UrlSanitizer {
      * @param patterns List of path patterns.
      */
     fun configurePatterns(patterns: List<String>) {
-        compiledPatterns.clear()
-        patterns.forEach { pattern ->
-            val regexString = pattern
-                .replace("?", "\\?")
-                .replace(".", "\\.")
-                .replace("**", "##DOUBLE_WILD##")
-                .replace("*", "##SINGLE_WILD##")
-                .replace("##DOUBLE_WILD##", ".*")
-                .replace("##SINGLE_WILD##", "[^/]+")
+        compiledPatterns =
+            patterns.map { pattern ->
+                val regexString =
+                    pattern
+                        .replace("?", "\\?")
+                        .replace(".", "\\.")
+                        .replace("**", "##DOUBLE_WILD##")
+                        .replace("*", "##SINGLE_WILD##")
+                        .replace("##DOUBLE_WILD##", ".*")
+                        .replace("##SINGLE_WILD##", "[^/]+")
 
-            compiledPatterns[pattern] = Regex("^$regexString$")
-        }
+                PatternEntry(pattern, Regex("^$regexString$"))
+            }
     }
 
     /**
@@ -47,11 +54,22 @@ internal class UrlSanitizer {
      * @return The sanitized URL.
      */
     fun sanitize(url: String): String {
-        for ((pattern, regex) in compiledPatterns) {
-            if (regex.matches(url)) {
-                return pattern
+        val patterns = compiledPatterns
+        for (i in patterns.indices) {
+            val entry = patterns[i]
+            if (entry.regex.matches(url)) {
+                return entry.originalPattern
             }
         }
+
+        var hasDigits = false
+        for (i in 0 until url.length) {
+            if (url[i].isDigit()) {
+                hasDigits = true
+                break
+            }
+        }
+        if (!hasDigits) return url
 
         var sanitized = url.replace(uuidRegex, "*")
         sanitized = sanitized.replace(numberRegex, "*")
